@@ -41,7 +41,15 @@ const App = () => {
     // Firebase Initialization and Auth State Listener
     useEffect(() => {
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const firebaseConfig = {
+          apiKey: "AIzaSyDoejoSEXYWX_QL9-xd-YGS4ouaH3BkZ1I",
+          authDomain: "h3-x-dst.firebaseapp.com",
+          projectId: "h3-x-dst",
+          storageBucket: "h3-x-dst.firebasestorage.app",
+          messagingSenderId: "922426422571",
+          appId: "1:922426422571:web:5a13dd1b75dc07678e016e",
+          measurementId: "G-V2PBRM9X53"
+       };
 
         if (!Object.keys(firebaseConfig).length) {
             console.error("Firebase config is missing!");
