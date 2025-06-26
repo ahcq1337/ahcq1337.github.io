@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat par Numéro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #f0f2f5;
+            --bg-secondary: #ffffff;
+            --text-primary: #050505;
+            --text-secondary: #6b7280;
+            --border-color: #e2e8f0;
+            --my-message-bg: #0084ff;
+            --my-message-text: #ffffff;
+            --other-message-bg: #e4e6eb;
+            --other-message-text: #050505;
+            --system-message-text: #6b7280;
+            --date-separator-bg: #e5e7eb;
+            --date-separator-text: #4b5563;
+        }
+
+        html.dark {
+            --bg-main: #18191a;
+            --bg-secondary: #242526;
+            --text-primary: #e4e6eb;
+            --text-secondary: #b0b3b8;
+            --border-color: #3a3b3c;
+            --my-message-bg: #2d88ff;
+            --my-message-text: #ffffff;
+            --other-message-bg: #3a3b3c;
+            --other-message-text: #e4e6eb;
+            --system-message-text: #b0b3b8;
+            --date-separator-bg: #3a3b3c;
+            --date-separator-text: #e4e6eb;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+        }
+        
+        .screen-container {
+            background-color: var(--bg-main);
+        }
+
+        .content-box, #chat-screen header, #chat-screen footer, .modal-content {
+            background-color: var(--bg-secondary);
+            border-color: var(--border-color);
+        }
+        .content-box h1, #chat-screen h1, #pseudo-display, .modal-content h2 {
+             color: var(--text-primary);
+        }
+         .content-box p, .modal-content p {
+             color: var(--text-secondary);
+        }
+        #room-display {
+             color: #2563eb;
+        }
+         html.dark #room-display {
+             color: #60a5fa;
+         }
+        .content-box input, #message-input, #gif-search-input {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .message-bubble {
+            padding: 0.75rem 1rem;
+            border-radius: 1.25rem;
+            word-wrap: break-word;
+        }
+        .my-message-bubble {
+            background-color: var(--my-message-bg);
+            color: var(--my-message-text);
+            border-bottom-right-radius: 0.25rem;
+        }
+        .other-message-bubble {
+            background-color: var(--other-message-bg);
+            color: var(--other-message-text);
+            border-bottom-left-radius: 0.25rem;
+        }
+        .image-bubble {
+            padding: 0.25rem;
+        }
+        .image-bubble img {
+            border-radius: 1rem;
+            max-height: 200px;
+            cursor: pointer;
+        }
+        .system-message, .date-separator {
+            text-align: center;
+            font-size: 0.875rem;
+            width: 100%;
+        }
+        .system-message {
+             color: var(--system-message-text);
+             font-style: italic;
+        }
+        .date-separator {
+            font-weight: 600;
+            background-color: var(--date-separator-bg);
+            color: var(--date-separator-text);
+            padding: 2px 8px;
+            border-radius: 9999px;
+            width: fit-content;
+            margin: 0.5rem auto;
+        }
+        .pseudo-text {
+            color: var(--text-secondary);
+        }
+        .time-text {
+             font-size: 0.75rem;
+             opacity: 0.75;
+        }
+        .my-message-bubble .time-text {
+             color: var(--my-message-text);
+        }
+         .other-message-bubble .time-text {
+             color: var(--text-secondary);
+        }
+        #typing-indicator {
+            color: var(--text-secondary);
+            height: 1.5rem;
+        }
+        .modal-overlay {
+            background-color: rgba(0,0,0,0.6);
+        }
+        #gif-results {
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        }
+        .tab {
+            border-bottom: 2px solid transparent;
+        }
+        .tab.active {
+            border-bottom-color: #2563eb;
+            color: #2563eb;
+        }
+        html.dark .tab.active {
+            border-bottom-color: #60a5fa;
+            color: #60a5fa;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="screen-container flex items-center justify-center h-screen">
+        <div class="content-box p-8 rounded-xl shadow-lg w-full max-w-sm">
+            <div class="flex border-b mb-6">
+                <button id="login-tab-btn" class="tab active flex-1 py-2 font-semibold">Se Connecter</button>
+                <button id="signup-tab-btn" class="tab flex-1 py-2 font-semibold text-secondary">Créer un compte</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form">
+                 <h2 class="text-2xl font-bold mb-6 text-center">Connexion</h2>
+                 <input type="text" id="login-pseudo" placeholder="Pseudo" class="w-full p-3 border rounded-lg mb-4" required>
+                 <input type="password" id="login-password" placeholder="Mot de passe" class="w-full p-3 border rounded-lg mb-4" required>
+                 <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700">Se connecter</button>
+            </form>
+
+            <!-- Sign-up Form -->
+            <form id="signup-form" class="hidden">
+                <h2 class="text-2xl font-bold mb-6 text-center">Créer un Compte</h2>
+                <input type="text" id="signup-pseudo" placeholder="Pseudo (2-16 caractères, sans espaces)" class="w-full p-3 border rounded-lg mb-4" required>
+                <input type="password" id="signup-password" placeholder="Mot de passe" class="w-full p-3 border rounded-lg mb-4" required>
+                <input type="url" id="signup-pfp" placeholder="URL de l'image (facultatif)" class="w-full p-3 border rounded-lg mb-4">
+                <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700">Créer le compte</button>
+            </form>
+            <p id="version-display" class="text-xs text-center text-gray-400 mt-6">v1.0.15</p>
+        </div>
+    </div>
+    
+    <!-- Lobby Screen -->
+    <div id="lobby-screen" class="hidden screen-container flex items-center justify-center h-screen">
+         <div class="content-box p-8 rounded-xl shadow-lg text-center w-full max-w-sm">
+            <h1 class="text-2xl font-bold mb-2">Bienvenue, <span id="lobby-pseudo"></span> !</h1>
+            <p class="text-gray-600 mb-6">Entrez un numéro pour rejoindre un salon.</p>
+            <form id="join-form">
+                <input type="number" id="room-number-input" placeholder="Numéro du salon" class="w-full p-3 border rounded-lg text-center text-xl mb-4 focus:ring-2 focus:ring-blue-500" required>
+                <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700">
+                    Rejoindre
+                </button>
+            </form>
+             <button id="who-is-online-btn" class="w-full mt-4 bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
+                Qui est en ligne ?
+            </button>
+            <button id="logout-btn" class="w-full mt-2 bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600">
+                Déconnexion
+            </button>
+        </div>
+    </div>
+
+
+    <!-- Chat Screen -->
+    <div id="chat-screen" class="hidden flex flex-col h-screen">
+        <header class="bg-white border-b p-4 shadow-sm">
+            <div class="container mx-auto flex justify-between items-center">
+                <div>
+                    <h1 class="font-bold text-lg">Salon: <span id="room-display"></span></h1>
+                    <p class="text-xs text-secondary">Connecté en tant que: <span id="pseudo-display" class="font-semibold"></span></p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button id="participants-btn" class="p-2 rounded-full text-primary hover:bg-gray-200 dark:hover:bg-gray-700">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </button>
+                    <button id="theme-toggle" class="p-2 rounded-full text-primary hover:bg-gray-200 dark:hover:bg-gray-700">
+                        <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                        <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon hidden"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                    </button>
+                    <button id="leave-button" class="bg-red-500 text-white text-xs font-semibold py-1 px-3 rounded-lg hover:bg-red-600">Quitter</button>
+                </div>
+            </div>
+        </header>
+        <main id="message-list" class="flex-grow overflow-y-auto p-4 flex flex-col gap-2"></main>
+        <div class="px-6" style="background-color: var(--bg-secondary);">
+            <p id="typing-indicator" class="text-sm italic h-6 text-secondary flex items-center"></p>
+        </div>
+        <footer class="bg-white p-4 border-t">
+            <form id="chat-form" class="flex items-center gap-3">
+                 <button type="button" id="send-image-btn" class="p-3 text-gray-500 hover:text-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-image"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                </button>
+                <button type="button" id="gif-btn" class="p-3 text-gray-500 hover:text-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-film"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M3 7.5h4"/><path d="M3 12h18"/><path d="M3 16.5h4"/><path d="M17 3v18"/><path d="M21 7.5h-4"/><path d="M21 16.5h-4"/></svg>
+                </button>
+                <input type="text" id="message-input" placeholder="Écrivez votre message..." class="w-full p-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500" autocomplete="off">
+                <button type="submit" class="bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 transition-colors disabled:bg-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </form>
+        </footer>
+    </div>
+    
+    <!-- All Modals -->
+    <div id="gif-modal-overlay" class="modal-overlay fixed inset-0 z-50 hidden items-center justify-center">
+        <div class="modal-content flex flex-col rounded-lg shadow-lg w-full max-w-lg max-h-[80vh]">
+            <header class="p-4 rounded-t-lg flex justify-between items-center border-b">
+                <h2 class="text-lg font-bold">Rechercher un GIF</h2>
+                <button id="close-gif-modal" class="text-2xl font-bold">&times;</button>
+            </header>
+            <div class="p-4">
+                 <input type="text" id="gif-search-input" placeholder="Rechercher sur GIPHY..." class="w-full p-2 border rounded-lg">
+            </div>
+            <div id="gif-results" class="p-4 grid gap-2 overflow-y-auto bg-gray-100 dark:bg-gray-900 rounded-b-lg"></div>
+        </div>
+    </div>
+    <div id="participants-modal-overlay" class="modal-overlay fixed inset-0 z-50 hidden items-center justify-center">
+        <div class="modal-content flex flex-col rounded-lg shadow-lg w-full max-w-sm">
+            <header class="p-4 rounded-t-lg flex justify-between items-center border-b">
+                <h2 class="text-lg font-bold">Participants du Salon</h2>
+                <button id="close-participants-modal" class="text-2xl font-bold">&times;</button>
+            </header>
+            <ul id="participants-list" class="p-4 space-y-2 overflow-y-auto"></ul>
+        </div>
+    </div>
+    <div id="online-list-modal-overlay" class="modal-overlay fixed inset-0 z-50 hidden items-center justify-center">
+        <div class="modal-content flex flex-col rounded-lg shadow-lg w-full max-w-sm">
+            <header class="p-4 rounded-t-lg flex justify-between items-center border-b">
+                <h2 class="text-lg font-bold">Salons Actifs</h2>
+                <button id="close-online-list-modal" class="text-2xl font-bold">&times;</button>
+            </header>
+            <div id="online-list-content" class="p-4 overflow-y-auto"></div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc, updateDoc, deleteField, getDoc, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Firebase Config and Initialization ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCGqkglI2W6AMTgYyQ6yhHaDUiAffCapuA",
+            authDomain: "chat-par-numero.firebaseapp.com",
+            projectId: "chat-par-numero",
+            storageBucket: "chat-par-numero.appspot.com",
+            messagingSenderId: "1083907008810",
+            appId: "1:1083907008810:web:93b60cc61df8a55decd653"
+        };
+        const appId = 'default-chat-app';
+        
+        let app, db, auth;
+        let userId, userPseudo, chatRoomId, userPFP;
+        let unsubscribeMessages = null;
+        let unsubscribeTyping = null;
+        let unsubscribeParticipants = null;
+        let lastMessageDate = null;
+        let isInitialLoad = true;
+        let typingTimeout = null;
+        let inactivityTimer = null;
+
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+        } catch (e) {
+            console.error("Firebase initialization failed:", e);
+            document.body.innerHTML = '<div class="text-center p-8 text-red-500">Erreur de configuration Firebase. Impossible de charger l\'application.</div>';
+        }
+
+        // --- UI Elements ---
+        const authScreen = document.getElementById('auth-screen');
+        const loginTabBtn = document.getElementById('login-tab-btn');
+        const signupTabBtn = document.getElementById('signup-tab-btn');
+        const loginForm = document.getElementById('login-form');
+        const signupForm = document.getElementById('signup-form');
+        const lobbyScreen = document.getElementById('lobby-screen');
+        const lobbyPseudo = document.getElementById('lobby-pseudo');
+        const joinForm = document.getElementById('join-form');
+        const roomInput = document.getElementById('room-number-input');
+        const chatScreen = document.getElementById('chat-screen');
+        const roomDisplay = document.getElementById('room-display');
+        const pseudoDisplay = document.getElementById('pseudo-display');
+        const messageList = document.getElementById('message-list');
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const leaveButton = document.getElementById('leave-button');
+        const logoutBtn = document.getElementById('logout-btn');
+        const themeToggleButton = document.getElementById('theme-toggle');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const sunIcon = document.getElementById('theme-icon-sun');
+        const moonIcon = document.getElementById('theme-icon-moon');
+        const sendImageBtn = document.getElementById('send-image-btn');
+        const gifBtn = document.getElementById('gif-btn');
+        const gifModalOverlay = document.getElementById('gif-modal-overlay');
+        const closeGifModalBtn = document.getElementById('close-gif-modal');
+        const gifSearchInput = document.getElementById('gif-search-input');
+        const gifResultsContainer = document.getElementById('gif-results');
+        const participantsBtn = document.getElementById('participants-btn');
+        const participantsModalOverlay = document.getElementById('participants-modal-overlay');
+        const closeParticipantsModalBtn = document.getElementById('close-participants-modal');
+        const participantsList = document.getElementById('participants-list');
+        const whoIsOnlineBtn = document.getElementById('who-is-online-btn');
+        const onlineListModalOverlay = document.getElementById('online-list-modal-overlay');
+        const closeOnlineListModalBtn = document.getElementById('close-online-list-modal');
+        const onlineListContent = document.getElementById('online-list-content');
+
+        const showScreen = (screen) => {
+            authScreen.classList.add('hidden');
+            lobbyScreen.classList.add('hidden');
+            chatScreen.classList.add('hidden');
+            screen.classList.remove('hidden');
+            screen.classList.add('flex');
+        };
+
+        // --- Auth Tabs ---
+        loginTabBtn.addEventListener('click', () => {
+            loginTabBtn.classList.add('active');
+            signupTabBtn.classList.remove('active');
+            loginForm.classList.remove('hidden');
+            signupForm.classList.add('hidden');
+        });
+        signupTabBtn.addEventListener('click', () => {
+            signupTabBtn.classList.add('active');
+            loginTabBtn.classList.remove('active');
+            signupForm.classList.remove('hidden');
+            loginForm.classList.add('hidden');
+        });
+
+        // --- Theme Management ---
+        const applyTheme = (theme) => {
+            document.documentElement.classList.toggle('dark', theme === 'dark');
+            sunIcon.classList.toggle('hidden', theme === 'dark');
+            moonIcon.classList.toggle('hidden', theme !== 'dark');
+        };
+        themeToggleButton.addEventListener('click', () => {
+            const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+            localStorage.setItem('theme', newTheme);
+            applyTheme(newTheme);
+        });
+        const loadInitialTheme = () => applyTheme(localStorage.getItem('theme') || 'light');
+        loadInitialTheme();
+
+        // --- GIPHY API Functions ---
+        const GIPHY_API_KEY = 'GlVGYHkr3WSBnllca54iNt0yFbjz7L65'; 
+        let giphySearchTimeout;
+        const fetchGifs = async (query) => {
+            const endpoint = query ? 'search' : 'trending';
+            const searchQuery = query ? `&q=${encodeURIComponent(query)}` : '';
+            const url = `https://api.giphy.com/v1/gifs/${endpoint}?api_key=${GIPHY_API_KEY}${searchQuery}&limit=24&rating=g`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                displayGifs(data.data);
+            } catch (error) {
+                console.error("GIPHY API Error:", error);
+                gifResultsContainer.innerHTML = '<p class="text-red-500 text-center">Erreur de chargement.</p>';
+            }
+        };
+        const displayGifs = (gifs) => {
+            gifResultsContainer.innerHTML = '';
+            if (gifs.length === 0) {
+                 gifResultsContainer.innerHTML = '<p class="text-secondary text-center">Aucun GIF trouvé.</p>';
+                 return;
+            }
+            gifs.forEach(gif => {
+                const img = document.createElement('img');
+                img.src = gif.images.fixed_height.url;
+                img.alt = gif.title;
+                img.className = 'w-full h-full object-cover cursor-pointer rounded hover:opacity-80';
+                img.addEventListener('click', () => {
+                    sendMessage(gif.images.original.url, 'image');
+                    closeModals();
+                });
+                gifResultsContainer.appendChild(img);
+            });
+        };
+        
+        // --- Inactivity Timer ---
+        const resetInactivityTimer = () => {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                alert("Vous avez été déconnecté pour inactivité.");
+                leaveChat('inactivity');
+            }, 300000); // 5 minutes
+        };
+        const stopInactivityTimer = () => clearTimeout(inactivityTimer);
+
+        // --- Participant & Typing Functions ---
+        const updatePresence = async (isJoining) => {
+            if (!chatRoomId || !userId) return;
+            const presenceDocRef = doc(db, `/artifacts/${appId}/public/data/roomParticipants`, chatRoomId);
+            try {
+                if(isJoining) {
+                    await setDoc(presenceDocRef, { participants: { [userId]: { pseudo: userPseudo, pfp: userPFP } } }, { merge: true });
+                } else {
+                     await updateDoc(presenceDocRef, { [`participants.${userId}`]: deleteField() });
+                }
+            } catch(e) { console.warn("Could not update presence", e); }
+        };
+        const listenForParticipants = (roomId) => {
+            if(unsubscribeParticipants) unsubscribeParticipants();
+            const presenceDocRef = doc(db, `/artifacts/${appId}/public/data/roomParticipants`, roomId);
+            unsubscribeParticipants = onSnapshot(presenceDocRef, (docSnap) => {
+                const data = docSnap.data();
+                const participants = data ? data.participants : {};
+                participantsList.innerHTML = '';
+                Object.values(participants).forEach(user => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-center gap-2 text-primary';
+                    const img = document.createElement('img');
+                    img.className = 'w-6 h-6 rounded-full object-cover';
+                    const defaultAvatar = `https://placehold.co/40x40/e4e6eb/050505?text=${(user.pseudo || 'A').charAt(0).toUpperCase()}`;
+                    img.src = user.pfp || defaultAvatar;
+                    img.onerror = () => { img.src = defaultAvatar; };
+                    li.appendChild(img);
+                    li.append(user.pseudo);
+                    participantsList.appendChild(li);
+                });
+            });
+        };
+        const updateTypingStatus = async (isTyping) => {
+            if (!chatRoomId || !userId) return;
+            const typingDocRef = doc(db, `/artifacts/${appId}/public/data/typingStatus`, chatRoomId);
+            try {
+                if (isTyping) {
+                    await setDoc(typingDocRef, { [userId]: userPseudo }, { merge: true });
+                } else {
+                    await updateDoc(typingDocRef, { [userId]: deleteField() });
+                }
+            } catch(error) { console.warn("Could not update typing status:", error.message); }
+        };
+        const listenForTyping = (roomId) => {
+            const typingDocRef = doc(db, `/artifacts/${appId}/public/data/typingStatus`, roomId);
+            unsubscribeTyping = onSnapshot(typingDocRef, (docSnap) => {
+                const typingUsers = docSnap.data() || {};
+                const otherTypingUsers = Object.values(typingUsers).filter(pseudo => pseudo !== userPseudo);
+                if (otherTypingUsers.length === 0) {
+                    typingIndicator.textContent = '';
+                } else if (otherTypingUsers.length === 1) {
+                    typingIndicator.textContent = `${otherTypingUsers[0]} est en train d'écrire...`;
+                } else {
+                    typingIndicator.textContent = `Plusieurs personnes sont en train d'écrire...`;
+                }
+                messageList.scrollTop = messageList.scrollHeight;
+            });
+        };
+
+        // --- Notification Functions ---
+        const requestNotificationPermission = async () => {
+            if ('Notification' in window && Notification.permission === 'default') {
+                await Notification.requestPermission();
+            }
+        };
+        const showNotification = (title, body) => {
+            if (document.hidden && Notification.permission === 'granted') {
+                new Notification(title, { body: body, icon: 'https://placehold.co/64x64/2563eb/ffffff?text=💬' });
+            }
+        };
+
+        // --- Helper Functions ---
+        const formatTime = (date) => !date ? '' : date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' });
+        const formatDate = (date) => !date ? '' : date.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Europe/Paris' });
+        
+        // --- Core Functions ---
+        const joinChat = async (roomId) => {
+            chatRoomId = roomId;
+            lastMessageDate = null; messageList.innerHTML = ''; isInitialLoad = true;
+            await requestNotificationPermission();
+            showScreen(chatScreen);
+            roomDisplay.textContent = chatRoomId; pseudoDisplay.textContent = userPseudo;
+            listenForMessages(chatRoomId); listenForTyping(chatRoomId); listenForParticipants(chatRoomId);
+            await updatePresence(true);
+            await sendSystemMessage(`${userPseudo} a rejoint le salon.`);
+            resetInactivityTimer();
+        };
+        const leaveChat = async (reason = 'manual') => {
+            stopInactivityTimer();
+             if (userPseudo && chatRoomId) {
+                const message = reason === 'inactivity' 
+                    ? `${userPseudo} a été déconnecté pour inactivité.` 
+                    : `${userPseudo} a quitté le salon.`;
+                await sendSystemMessage(message);
+                await updateTypingStatus(false);
+                await updatePresence(false);
+             }
+             if (unsubscribeMessages) unsubscribeMessages();
+             if (unsubscribeTyping) unsubscribeTyping();
+             if (unsubscribeParticipants) unsubscribeParticipants();
+            chatRoomId = null; 
+            messageList.innerHTML = '';
+            showScreen(lobbyScreen);
+        }
+
+        const addMessageToDOM = (message) => {
+            const messageDate = message.timestamp?.toDate();
+            if (messageDate) {
+                const messageDateString = messageDate.toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' });
+                if (messageDateString !== lastMessageDate) {
+                    const dateSeparator = document.createElement('div');
+                    dateSeparator.className = 'date-separator';
+                    dateSeparator.textContent = formatDate(messageDate);
+                    messageList.appendChild(dateSeparator);
+                    lastMessageDate = messageDateString;
+                }
+            }
+            if (message.type === 'system') {
+                const systemMessageDiv = document.createElement('div');
+                systemMessageDiv.className = 'system-message';
+                const time = messageDate ? `[${formatTime(messageDate)}] ` : '';
+                systemMessageDiv.textContent = `${time}${message.text}`;
+                messageList.appendChild(systemMessageDiv);
+            } else {
+                const isMyMessage = message.senderId === userId;
+                const row = document.createElement('div');
+                row.className = `w-full flex items-end gap-2.5 ${isMyMessage ? 'justify-end' : 'justify-start'}`;
+                const avatarImg = document.createElement('img');
+                avatarImg.className = 'w-8 h-8 rounded-full object-cover flex-shrink-0';
+                const defaultAvatar = `https://placehold.co/40x40/e4e6eb/050505?text=${(message.pseudo || 'A').charAt(0).toUpperCase()}`;
+                avatarImg.src = isMyMessage ? (userPFP || defaultAvatar) : (message.pfp || defaultAvatar);
+                avatarImg.onerror = () => { avatarImg.src = defaultAvatar; };
+                avatarImg.alt = message.pseudo;
+                const bubble = document.createElement('div');
+                const isImage = message.messageType === 'image';
+                bubble.className = `message-bubble max-w-[calc(100%-4rem)] ${isMyMessage ? 'my-message-bubble' : 'other-message-bubble'} ${isImage ? 'image-bubble' : ''}`;
+                if (!isMyMessage) {
+                    const pseudoElement = document.createElement('div');
+                    pseudoElement.className = 'text-xs font-bold mb-1 pseudo-text';
+                    pseudoElement.textContent = message.pseudo || 'Anonyme';
+                    bubble.appendChild(pseudoElement);
+                }
+                if (isImage) {
+                    const link = document.createElement('a'); link.href = message.text; link.target = '_blank';
+                    const img = document.createElement('img'); img.src = message.text; img.alt = "Image envoyée"; img.className = 'max-w-full h-auto rounded-lg';
+                    link.appendChild(img); bubble.appendChild(link);
+                } else {
+                    const textElement = document.createElement('p'); textElement.textContent = message.text;
+                    bubble.appendChild(textElement);
+                }
+                const timeElement = document.createElement('div');
+                timeElement.className = 'text-xs mt-1 time-text text-right w-full';
+                timeElement.textContent = formatTime(messageDate);
+                bubble.appendChild(timeElement);
+                if (isMyMessage) {
+                    row.appendChild(bubble); row.appendChild(avatarImg);
+                } else {
+                    row.appendChild(avatarImg); row.appendChild(bubble);
+                }
+                messageList.appendChild(row);
+            }
+            messageList.scrollTop = messageList.scrollHeight;
+        };
+
+        const listenForMessages = (roomId) => {
+            if (unsubscribeMessages) unsubscribeMessages(); 
+            const messagesCollectionPath = `/artifacts/${appId}/public/data/chatRooms/${roomId}/messages`;
+            const q = query(collection(db, messagesCollectionPath), orderBy("timestamp"));
+            unsubscribeMessages = onSnapshot(q, (snapshot) => {
+                const changes = snapshot.docChanges();
+                if (isInitialLoad) {
+                     messageList.innerHTML = ''; lastMessageDate = null;
+                     changes.forEach(change => { if (change.type === 'added') addMessageToDOM(change.doc.data()); });
+                     isInitialLoad = false;
+                } else {
+                    changes.forEach(change => {
+                        if (change.type === 'added') {
+                            const message = change.doc.data();
+                            addMessageToDOM(message);
+                            if (message.type === 'user' && message.senderId !== userId) {
+                                const notifBody = message.messageType === 'image' ? `${message.pseudo} a envoyé une image.` : message.text;
+                                showNotification(`Nouveau message de ${message.pseudo}`, notifBody);
+                            }
+                        }
+                    });
+                }
+            }, (error) => {
+                console.error("Error listening for messages:", error);
+                messageList.innerHTML = '<div class="text-center text-red-500">Erreur de chargement des messages.</div>'
+            });
+        };
+        const sendSystemMessage = async (text) => {
+            if (!chatRoomId) return;
+            const messagesCollectionPath = `/artifacts/${appId}/public/data/chatRooms/${chatRoomId}/messages`;
+            try {
+                await addDoc(collection(db, messagesCollectionPath), { text: text, type: 'system', timestamp: serverTimestamp() });
+            } catch (error) { console.error("Error sending system message: ", error); }
+        };
+        const sendMessage = async (text, type = 'text') => {
+            if (!text.trim() || !chatRoomId) return;
+            resetInactivityTimer();
+            const originalText = text;
+            if (type === 'text') { messageInput.value = ''; }
+            try {
+                await updateTypingStatus(false);
+                clearTimeout(typingTimeout);
+            } catch(e) { console.warn("Could not update typing status, but sending message anyway.", e); }
+            const messagesCollectionPath = `/artifacts/${appId}/public/data/chatRooms/${chatRoomId}/messages`;
+            try {
+                await addDoc(collection(db, messagesCollectionPath), { text: originalText, type: 'user', messageType: type, senderId: userId, pseudo: userPseudo, pfp: userPFP || '', timestamp: serverTimestamp() });
+            } catch (error) {
+                console.error("Error sending message: ", error);
+                alert("Erreur lors de l'envoi du message.");
+                if (type === 'text') { messageInput.value = originalText; }
+            }
+        };
+
+        // --- Event Listeners ---
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const pseudo = document.getElementById('login-pseudo').value;
+            const password = document.getElementById('login-password').value;
+            const normalizedPseudo = pseudo.toLowerCase();
+            const usernameRef = doc(db, "usernames", normalizedPseudo);
+            try {
+                const usernameSnap = await getDoc(usernameRef);
+                if (!usernameSnap.exists()) { throw new Error("Pseudo ou mot de passe incorrect."); }
+                
+                const { uid } = usernameSnap.data();
+                const userDocRef = doc(db, "users", uid);
+                const userDoc = await getDoc(userDocRef);
+                if (!userDoc.exists()) { throw new Error("Profil utilisateur introuvable."); }
+                
+                const { email } = userDoc.data();
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                alert("Erreur de connexion : " + error.message);
+            }
+        });
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const pseudo = document.getElementById('signup-pseudo').value;
+            const password = document.getElementById('signup-password').value;
+            const pfp = document.getElementById('signup-pfp').value;
+            
+            const validationRegex = /^[a-zA-Z0-9]{2,16}$/;
+            if (!validationRegex.test(pseudo)) {
+                alert("Le pseudo doit contenir entre 2 et 16 caractères et ne peut inclure que des lettres et des chiffres.");
+                return;
+            }
+
+            const normalizedPseudo = pseudo.toLowerCase();
+            const usernameRef = doc(db, "usernames", normalizedPseudo);
+            
+            try {
+                const usernameSnap = await getDoc(usernameRef);
+                if (usernameSnap.exists()) {
+                    alert("Ce pseudo est déjà utilisé. Veuillez en choisir un autre.");
+                    return;
+                }
+                const dummyEmail = `${normalizedPseudo}@chat.app`;
+                const userCredential = await createUserWithEmailAndPassword(auth, dummyEmail, password);
+                const user = userCredential.user;
+                
+                const batch = writeBatch(db);
+                const userDocRef = doc(db, "users", user.uid);
+                batch.set(userDocRef, { pseudo: pseudo, pfp: pfp, email: dummyEmail });
+                batch.set(usernameRef, { uid: user.uid });
+                
+                await batch.commit();
+            } catch(error) {
+                 alert("Erreur de création de compte : " + error.message);
+            }
+        });
+        
+        joinForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const roomId = roomInput.value.trim();
+            if (roomId) { joinChat(roomId); }
+        });
+        chatForm.addEventListener('submit', (e) => { e.preventDefault(); sendMessage(messageInput.value); });
+        leaveButton.addEventListener('click', () => leaveChat('manual'));
+        logoutBtn.addEventListener('click', () => signOut(auth));
+        window.addEventListener('beforeunload', () => { if(chatRoomId) updatePresence(false) });
+        sendImageBtn.addEventListener('click', () => {
+            resetInactivityTimer();
+            const imageUrl = prompt("Veuillez entrer l'URL de l'image :");
+            if (imageUrl) { sendMessage(imageUrl, 'image'); }
+        });
+        gifBtn.addEventListener('click', () => {
+            resetInactivityTimer();
+            gifModalOverlay.classList.remove('hidden'); gifModalOverlay.classList.add('flex'); gifSearchInput.focus(); fetchGifs('');
+        });
+        const closeModals = () => {
+            gifModalOverlay.classList.add('hidden');
+            participantsModalOverlay.classList.add('hidden');
+            onlineListModalOverlay.classList.add('hidden');
+        };
+        closeGifModalBtn.addEventListener('click', closeModals);
+        gifModalOverlay.addEventListener('click', (e) => { if (e.target === gifModalOverlay) closeModals(); });
+        gifSearchInput.addEventListener('keyup', (e) => {
+            clearTimeout(giphySearchTimeout);
+            giphySearchTimeout = setTimeout(() => { fetchGifs(e.target.value); }, 300);
+        });
+        participantsBtn.addEventListener('click', () => participantsModalOverlay.classList.remove('hidden'));
+        closeParticipantsModalBtn.addEventListener('click', () => participantsModalOverlay.classList.add('hidden'));
+        participantsModalOverlay.addEventListener('click', (e) => { if (e.target === participantsModalOverlay) closeModals() });
+        
+        whoIsOnlineBtn.addEventListener('click', async () => {
+            const presenceCollectionRef = collection(db, `/artifacts/${appId}/public/data/roomParticipants`);
+            const snapshot = await getDocs(presenceCollectionRef);
+            onlineListContent.innerHTML = '';
+            if(snapshot.empty) {
+                onlineListContent.innerHTML = '<p class="text-secondary">Personne n\'est en ligne pour le moment.</p>';
+            } else {
+                const list = document.createElement('ul');
+                list.className = 'space-y-2';
+                snapshot.forEach(doc => {
+                    const participantCount = Object.keys(doc.data().participants || {}).length;
+                    if(participantCount > 0) {
+                        const li = document.createElement('li');
+                        li.textContent = `Salon ${doc.id}: ${participantCount} participant(s)`;
+                        list.appendChild(li);
+                    }
+                });
+                onlineListContent.appendChild(list);
+            }
+            onlineListModalOverlay.classList.remove('hidden');
+        });
+        closeOnlineListModalBtn.addEventListener('click', closeModals);
+        onlineListModalOverlay.addEventListener('click', (e) => { if (e.target === onlineListModalOverlay) closeModals(); });
+
+        messageInput.addEventListener('input', () => {
+            clearTimeout(typingTimeout); updateTypingStatus(true);
+            typingTimeout = setTimeout(() => {
+                updateTypingStatus(false);
+            }, 3000);
+            resetInactivityTimer();
+        });
+
+        ['mousemove', 'mousedown', 'keypress', 'touchmove', 'scroll'].forEach(event => {
+            window.addEventListener(event, resetInactivityTimer);
+        });
+        
+        // --- Authentication ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userId = user.uid;
+                const userDocRef = doc(db, "users", userId);
+                const userDoc = await getDoc(userDocRef);
+                if(userDoc.exists()) {
+                    const userData = userDoc.data();
+                    userPseudo = userData.pseudo;
+                    userPFP = userData.pfp;
+                } else {
+                    userPseudo = 'Utilisateur'; // Fallback
+                    userPFP = '';
+                }
+                lobbyPseudo.textContent = userPseudo;
+                showScreen(lobbyScreen);
+            } else {
+                userId = null;
+                userPseudo = null;
+                userPFP = null;
+                if(chatRoomId) {
+                    leaveChat();
+                }
+                showScreen(authScreen);
+            }
+        });
+    </script>
+</body>
+</html>
