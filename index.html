@@ -12,410 +12,284 @@
         :root {
             --bg-main: #f0f2f5; --bg-secondary: #ffffff; --bg-tertiary: #e4e6eb; --bg-accent: #f0f2f5;
             --text-primary: #050505; --text-secondary: #6b7280; --border-color: #e2e8f0;
-            --my-message-bg: #0084ff; --my-message-text: #ffffff;
-            --other-message-bg: #e4e6eb; --other-message-text: #050505;
+            --my-message-bg: #007aff; --my-message-text: #ffffff;
+            --other-message-bg: #e5e5ea; --other-message-text: #000000;
         }
         html.dark {
-            --bg-main: #18191a; --bg-secondary: #242526; --bg-tertiary: #3a3b3c; --bg-accent: #3a3b3c;
-            --text-primary: #e4e6eb; --text-secondary: #b0b3b8; --border-color: #3a3b3c;
-            --my-message-bg: #2d88ff; --my-message-text: #ffffff;
-            --other-message-bg: #3a3b3c; --other-message-text: #e4e6eb;
+            --bg-main: #1c1c1e; --bg-secondary: #2c2c2e; --bg-tertiary: #3a3a3c; --bg-accent: #2c2c2e;
+            --text-primary: #ffffff; --text-secondary: #8e8e93; --border-color: #3a3a3c;
+            --my-message-bg: #0b84fe; --my-message-text: #ffffff;
+            --other-message-bg: #3a3a3c; --other-message-text: #ffffff;
         }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-primary); overflow: hidden; }
         .server-icon { width: 3rem; height: 3rem; background-color: var(--bg-tertiary); border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1.5rem; cursor: pointer; transition: all 0.2s ease-in-out; }
         .server-icon:hover, .server-icon.active { border-radius: 1rem; }
-        .server-icon.active { border: 2px solid var(--my-message-bg); }
+        .server-icon.active { box-shadow: 0 0 0 3px var(--my-message-bg); }
         .server-icon img { width: 100%; height: 100%; object-fit: cover; }
         .modal-content { background-color: var(--bg-secondary); border-color: var(--border-color); color: var(--text-primary); }
         .modal-overlay { background-color: rgba(0,0,0,0.6); }
         #message-list, #server-list { scrollbar-width: thin; scrollbar-color: var(--bg-tertiary) transparent; }
+        .auth-input, .modal-input { background-color: var(--bg-accent); border-color: var(--border-color); }
+        .tab { border-bottom: 2px solid transparent; }
+        .tab.active { border-bottom-color: #007aff; color: #007aff; }
+        html.dark .tab.active { border-bottom-color: #0b84fe; color: #0b84fe; }
+        .message-row { display: flex; margin-bottom: 0.25rem; max-width: 75%; }
+        .message-content { display: flex; flex-direction: column; }
+        .message-bubble { padding: 0.5rem 0.85rem; border-radius: 1.25rem; word-wrap: break-word; line-height: 1.4; }
+        .message-time { font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.25rem; }
+        .my-message { align-self: flex-end; }
+        .my-message .message-bubble { background-color: var(--my-message-bg); color: var(--my-message-text); border-bottom-right-radius: 0.25rem; }
+        .my-message .message-time { text-align: right; }
+        .other-message { align-self: flex-start; }
+        .other-message .message-bubble { background-color: var(--other-message-bg); color: var(--other-message-text); border-bottom-left-radius: 0.25rem; }
+        .other-message .message-time { text-align: left; }
+        .message-avatar { width: 2.25rem; height: 2.25rem; border-radius: 9999px; margin-right: 0.5rem; }
+        .message-pseudo { font-size: 0.8rem; font-weight: 600; margin-bottom: 0.2rem; color: var(--text-secondary); }
     </style>
 </head>
 <body>
 
-    <div id="auth-screen" class="flex items-center justify-center h-screen">
-        <div class="modal-content p-8 rounded-xl shadow-lg w-full max-w-sm">
-            <div class="flex justify-center mb-6">
-                <img src="https://placehold.co/150x50/ffffff/050505?text=ChatApp" alt="Logo" class="block dark:hidden h-12">
-                <img src="https://placehold.co/150x50/242526/e4e6eb?text=ChatApp" alt="Logo" class="hidden dark:block h-12">
+    <!-- #################### ÉCRAN D'AUTHENTIFICATION #################### -->
+    <div id="auth-screen" class="hidden items-center justify-center h-screen w-screen">
+        <div class="modal-content p-8 rounded-xl shadow-lg w-full max-w-sm relative">
+            <button id="auth-theme-toggle" class="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"></button>
+            <div class="flex justify-center mb-6"><img src="https://placehold.co/150x50/ffffff/050505?text=ChatApp" alt="Logo" class="block dark:hidden h-12"><img src="https://placehold.co/150x50/242526/e4e6eb?text=ChatApp" alt="Logo" class="hidden dark:block h-12"></div>
+            <div class="flex border-b border-border-color mb-6">
+                <button id="login-tab-btn" class="tab flex-1 py-2 font-semibold">Se Connecter</button>
+                <button id="signup-tab-btn" class="tab flex-1 py-2 font-semibold text-secondary">Créer un compte</button>
             </div>
-            <div class="flex border-b mb-6">
-                <button id="login-tab-btn" class="flex-1 py-2 font-semibold border-b-2 border-blue-500 text-blue-500">Se Connecter</button>
-                <button id="signup-tab-btn" class="flex-1 py-2 font-semibold text-gray-500">Créer un compte</button>
-            </div>
-            <form id="login-form">
-                <p id="login-error" class="text-red-500 text-sm mb-4 text-center hidden"></p>
-                <input type="text" id="login-pseudo" placeholder="Pseudo" class="w-full p-3 border rounded-lg mb-4 bg-gray-100 dark:bg-gray-800" required>
-                <input type="password" id="login-password" placeholder="Mot de passe" class="w-full p-3 border rounded-lg mb-4 bg-gray-100 dark:bg-gray-800" required>
-                <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700">Se connecter</button>
-            </form>
-            <form id="signup-form" class="hidden">
-                <p id="signup-error" class="text-red-500 text-sm mb-4 text-center hidden"></p>
-                <input type="text" id="signup-pseudo" placeholder="Pseudo (2-16 caractères, sans espaces)" class="w-full p-3 border rounded-lg mb-4 bg-gray-100 dark:bg-gray-800" required>
-                <input type="password" id="signup-password" placeholder="Mot de passe" class="w-full p-3 border rounded-lg mb-4 bg-gray-100 dark:bg-gray-800" required>
-                <input type="url" id="signup-pfp" placeholder="URL de l'image (facultatif)" class="w-full p-3 border rounded-lg mb-4 bg-gray-100 dark:bg-gray-800">
-                <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700">Créer le compte</button>
-            </form>
+            <form id="login-form" class="hidden"><p id="login-error" class="text-red-500 text-sm mb-4 text-center hidden"></p><input type="text" id="login-pseudo" placeholder="Pseudo" class="w-full p-3 border rounded-lg mb-4 auth-input" required><input type="password" id="login-password" placeholder="Mot de passe" class="w-full p-3 border rounded-lg mb-4 auth-input" required><button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700">Se connecter</button></form>
+            <form id="signup-form" class="hidden"><p id="signup-error" class="text-red-500 text-sm mb-4 text-center hidden"></p><input type="text" id="signup-pseudo" placeholder="Pseudo (2-16 caractères)" class="w-full p-3 border rounded-lg mb-4 auth-input" required><input type="password" id="signup-password" placeholder="Mot de passe (6+ caractères)" class="w-full p-3 border rounded-lg mb-4 auth-input" required><input type="url" id="signup-pfp" placeholder="URL de l'image (facultatif)" class="w-full p-3 border rounded-lg mb-4 auth-input"><button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700">Créer le compte</button></form>
         </div>
     </div>
 
+    <!-- #################### INTERFACE PRINCIPALE #################### -->
     <div id="main-app-screen" class="hidden h-screen w-screen flex text-primary">
-        <nav id="server-list" class="w-20 bg-gray-200 dark:bg-gray-900 p-3 flex flex-col items-center gap-3 overflow-y-auto">
-            </nav>
-
+        <nav id="server-list" class="w-20 bg-gray-200 dark:bg-gray-900 p-3 flex flex-col items-center gap-3 overflow-y-auto"></nav>
         <div id="chat-container" class="flex-grow flex flex-col bg-secondary">
-            <header class="bg-white dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 p-4 shadow-sm flex justify-between items-center flex-shrink-0">
-                <div>
-                    <h1 id="channel-name-display" class="font-bold text-lg">Bienvenue !</h1>
-                    <p id="channel-topic-display" class="text-xs text-secondary">Sélectionnez un canal ou créez-en un.</p>
-                </div>
+            <header class="bg-white dark:bg-gray-800 border-b border-border-color p-4 shadow-sm flex justify-between items-center flex-shrink-0">
+                <div><h1 id="channel-name-display" class="font-bold text-lg">Bienvenue !</h1><p id="channel-topic-display" class="text-xs text-secondary">Sélectionnez un canal.</p></div>
                 <div class="flex items-center gap-4">
-                    <button id="notifications-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 relative">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-                        <span id="notif-indicator" class="hidden absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
-                    </button>
-                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-                        <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-                        <svg id="theme-icon-moon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-                    </button>
+                    <button id="invite-to-channel-btn" class="hidden p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg></button>
+                    <button id="channel-settings-btn" class="hidden p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                    <button id="notifications-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 relative"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span id="notif-indicator" class="hidden absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span></button>
+                    <button id="main-theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"></button>
                     <button id="logout-btn" class="bg-red-500 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-red-600">Déconnexion</button>
                 </div>
             </header>
-
-            <main id="message-list" class="flex-grow overflow-y-auto p-4 flex flex-col gap-2 bg-gray-100 dark:bg-gray-700">
-                <div class="text-center text-secondary m-auto">Sélectionnez un canal pour commencer à discuter.</div>
-            </main>
-            
-            <footer id="chat-footer" class="bg-white dark:bg-gray-800 p-4 border-t border-gray-300 dark:border-gray-700 hidden">
-                <form id="chat-form" class="flex items-center gap-3">
-                    <input type="text" id="message-input" placeholder="Écrivez votre message..." class="w-full p-3 border rounded-full bg-gray-100 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500" autocomplete="off">
-                    <button type="submit" class="bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700"><svg width="24" height="24" viewBox="0 0 24 24"><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
-                </form>
-            </footer>
+            <main id="message-list" class="flex-grow overflow-y-auto p-4 flex flex-col gap-1 bg-accent"></main>
+            <footer id="chat-footer" class="bg-white dark:bg-gray-800 p-4 border-t border-border-color hidden"><form id="chat-form" class="flex items-center gap-3"><input type="text" id="message-input" placeholder="Écrivez votre message..." class="w-full p-3 border rounded-full bg-accent focus:outline-none focus:ring-2 focus:ring-blue-500" autocomplete="off"><button type="submit" class="bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button></form></footer>
         </div>
     </div>
     
-    <div id="add-channel-modal" class="hidden modal-overlay fixed inset-0 z-50 flex items-center justify-center">
-        <div class="modal-content rounded-lg shadow-lg w-full max-w-md">
-            <header class="p-4 flex justify-between items-center border-b">
-                <h2 class="text-lg font-bold">Créer ou rejoindre un canal</h2>
-                <button class="close-modal-btn text-2xl font-bold">&times;</button>
-            </header>
-            <div class="p-6">
-                <h3 class="font-semibold mb-2">Créer un nouveau canal</h3>
-                <form id="create-channel-form" class="space-y-3">
-                    <input id="new-channel-name" type="text" placeholder="Nom du canal" class="w-full p-2 border rounded bg-accent" required>
-                    <input id="new-channel-icon" type="url" placeholder="URL de l'icône (facultatif)" class="w-full p-2 border rounded bg-accent">
-                    <div class="flex items-center gap-2">
-                        <input id="new-channel-public" type="checkbox" class="h-4 w-4">
-                        <label for="new-channel-public">Canal Public</label>
-                    </div>
-                    <button type="submit" class="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded hover:bg-green-700">Créer</button>
-                </form>
-                <hr class="my-6">
-                <h3 class="font-semibold mb-2">Rejoindre un canal public (Bientôt disponible)</h3>
-                 <p class="text-sm text-secondary">Cette fonctionnalité est en cours de développement.</p>
-            </div>
-        </div>
-    </div>
+    <!-- #################### MODALES #################### -->
+    <div id="add-channel-modal" class="hidden modal-overlay fixed inset-0 z-50 flex items-center justify-center"><div class="modal-content rounded-lg shadow-lg w-full max-w-md"><header class="p-4 flex justify-between items-center border-b border-border-color"><h2 class="text-lg font-bold">Canaux</h2><button class="close-modal-btn text-2xl font-bold">&times;</button></header><div class="p-6"><div class="flex border-b border-border-color mb-4"><button id="create-tab-btn" class="tab flex-1 py-2 font-semibold">Créer</button><button id="join-tab-btn" class="tab flex-1 py-2 font-semibold text-secondary">Rejoindre</button></div><form id="create-channel-form" class="space-y-3"><input id="new-channel-name" type="text" placeholder="Nom du canal" class="w-full p-2 border rounded modal-input" required><input id="new-channel-icon" type="url" placeholder="URL de l'icône (facultatif)" class="w-full p-2 border rounded modal-input"><div class="flex items-center gap-2"><input id="new-channel-private" type="checkbox" class="h-4 w-4"><label for="new-channel-private">Canal Privé (sur invitation uniquement)</label></div><button type="submit" class="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded hover:bg-green-700">Créer le canal</button></form><form id="join-channel-form" class="hidden space-y-3"><input id="join-channel-code" type="text" placeholder="Code d'invitation" class="w-full p-2 border rounded modal-input" required><button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700">Rejoindre le canal</button></form></div></div></div>
+    <div id="invitations-modal" class="hidden modal-overlay fixed inset-0 z-50 flex items-center justify-center"><div class="modal-content rounded-lg shadow-lg w-full max-w-md"><header class="p-4 flex justify-between items-center border-b border-border-color"><h2 class="text-lg font-bold">Invitations</h2><button class="close-modal-btn text-2xl font-bold">&times;</button></header><div id="invitations-list" class="p-6 space-y-3 max-h-96 overflow-y-auto"></div></div></div>
+    <div id="edit-profile-modal" class="hidden modal-overlay fixed inset-0 z-50 flex items-center justify-center"><div class="modal-content rounded-lg shadow-lg w-full max-w-md"><header class="p-4 flex justify-between items-center border-b border-border-color"><h2 class="text-lg font-bold">Modifier le profil</h2><button class="close-modal-btn text-2xl font-bold">&times;</button></header><div class="p-6"><form id="edit-profile-form" class="space-y-3"><input id="edit-pseudo" type="text" placeholder="Nouveau pseudo" class="w-full p-2 border rounded modal-input" required><input id="edit-pfp" type="url" placeholder="Nouvelle URL d'image" class="w-full p-2 border rounded modal-input"><button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700">Sauvegarder</button></form></div></div></div>
+    <div id="edit-channel-modal" class="hidden modal-overlay fixed inset-0 z-50 flex items-center justify-center"><div class="modal-content rounded-lg shadow-lg w-full max-w-md"><header class="p-4 flex justify-between items-center border-b border-border-color"><h2 class="text-lg font-bold">Modifier le canal</h2><button class="close-modal-btn text-2xl font-bold">&times;</button></header><div class="p-6"><form id="edit-channel-form" class="space-y-3"><input id="edit-channel-name" type="text" placeholder="Nouveau nom" class="w-full p-2 border rounded modal-input" required><input id="edit-channel-icon" type="url" placeholder="Nouvelle URL d'icône" class="w-full p-2 border rounded modal-input"><button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700">Sauvegarder</button></form><hr class="my-4"><div class="space-y-2"><h3 class="font-bold text-red-500">Zone de Danger</h3><p class="text-sm text-secondary">Supprimer un canal est une action irréversible.</p><input type="text" id="delete-channel-confirm" placeholder="Entrez le nom du canal pour confirmer" class="w-full p-2 border rounded modal-input border-red-300"><button id="delete-channel-btn" class="w-full bg-red-600 text-white font-semibold py-2 px-4 rounded hover:bg-red-700 disabled:bg-gray-400" disabled>Supprimer ce canal</button></div></div></div></div>
+    <div id="friends-modal" class="hidden modal-overlay fixed inset-0 z-50 flex items-center justify-center"><div class="modal-content rounded-lg shadow-lg w-full max-w-lg"><header class="p-4 flex justify-between items-center border-b border-border-color"><h2 class="text-lg font-bold">Amis</h2><button class="close-modal-btn text-2xl font-bold">&times;</button></header><div class="p-6"><div class="flex border-b border-border-color mb-4"><button id="friends-list-tab" class="tab flex-1 py-2 font-semibold">Mes Amis</button><button id="add-friend-tab" class="tab flex-1 py-2 font-semibold text-secondary">Ajouter</button></div><div id="friends-list-content"></div><form id="add-friend-form" class="hidden space-y-3"><input id="add-friend-pseudo" type="text" placeholder="Pseudo de l'utilisateur" class="w-full p-2 border rounded modal-input" required><button type="submit" class="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded hover:bg-green-700">Envoyer une demande d'ami</button></form></div></div></div>
+    <div id="invite-to-channel-modal" class="hidden modal-overlay fixed inset-0 z-50 flex items-center justify-center"><div class="modal-content rounded-lg shadow-lg w-full max-w-md"><header class="p-4 flex justify-between items-center border-b border-border-color"><h2 class="text-lg font-bold">Inviter des amis</h2><button class="close-modal-btn text-2xl font-bold">&times;</button></header><div id="invite-friends-list" class="p-6 space-y-2 max-h-96 overflow-y-auto"></div></div></div>
 
-    <div id="invitations-modal" class="hidden modal-overlay fixed inset-0 z-50 flex items-center justify-center">
-        <div class="modal-content rounded-lg shadow-lg w-full max-w-md">
-            <header class="p-4 flex justify-between items-center border-b">
-                <h2 class="text-lg font-bold">Invitations</h2>
-                <button class="close-modal-btn text-2xl font-bold">&times;</button>
-            </header>
-            <div id="invitations-list" class="p-6 space-y-3 max-h-96 overflow-y-auto">
-                </div>
-        </div>
-    </div>
-    
-
+    <!-- #################### SCRIPT #################### -->
     <script type="module">
+        // --- Imports Firebase ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc, updateDoc, getDoc, writeBatch, where, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc, updateDoc, getDoc, getDocs, writeBatch, where, arrayUnion, deleteDoc, collectionGroup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Configuration Firebase ---
-        const firebaseConfig = {
-         apiKey: "AIzaSyDoejoSEXYWX_QL9-xd-YGS4ouaH3BkZ1I",
-         authDomain: "h3-x-dst.firebaseapp.com",
-         projectId: "h3-x-dst",
-         storageBucket: "h3-x-dst.firebasestorage.app",
-         messagingSenderId: "922426422571",
-         appId: "1:922426422571:web:5a13dd1b75dc07678e016e",
-        };
-        
-        // --- Initialisation ---
+        // --- Configuration et Initialisation ---
+        const firebaseConfig = { apiKey: "AIzaSyDoejoSEXYWX_QL9-xd-YGS4ouaH3BkZ1I", authDomain: "h3-x-dst.firebaseapp.com", projectId: "h3-x-dst", storageBucket: "h3-x-dst.firebasestorage.app", messagingSenderId: "922426422571", appId: "1:922426422571:web:5a13dd1b75dc07678e016e" };
         let app, db, auth;
         let userId, userPseudo, userPFP;
         let activeChannelId = null;
+        let activeChannelData = null;
+        let unsubscribeListeners = [];
 
-        // Abonnements Firestore
-        let unsubscribeMessages, unsubscribeChannelList, unsubscribeInvitations;
-
-        try {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-        } catch (e) {
-            document.body.innerHTML = `<div class="p-8 text-red-500">Erreur Firebase: ${e.message}</div>`;
-        }
+        try { app = initializeApp(firebaseConfig); db = getFirestore(app); auth = getAuth(app); } catch (e) { document.body.innerHTML = `<div class="p-8 text-red-500">Erreur Firebase: ${e.message}</div>`; }
         
         // --- Éléments UI ---
-        const authScreen = document.getElementById('auth-screen');
-        const mainAppScreen = document.getElementById('main-app-screen');
-        const serverList = document.getElementById('server-list');
-        const messageList = document.getElementById('message-list');
-        const channelNameDisplay = document.getElementById('channel-name-display');
-        const channelTopicDisplay = document.getElementById('channel-topic-display');
-        const chatFooter = document.getElementById('chat-footer');
-        const chatForm = document.getElementById('chat-form');
-        const messageInput = document.getElementById('message-input');
-        const logoutBtn = document.getElementById('logout-btn');
-        const notificationsBtn = document.getElementById('notifications-btn');
-        const notifIndicator = document.getElementById('notif-indicator');
-        const addChannelModal = document.getElementById('add-channel-modal');
-        const invitationsModal = document.getElementById('invitations-modal');
-        const invitationsList = document.getElementById('invitations-list');
+        const ui = { authScreen: document.getElementById('auth-screen'), mainAppScreen: document.getElementById('main-app-screen'), loginForm: document.getElementById('login-form'), signupForm: document.getElementById('signup-form'), loginTabBtn: document.getElementById('login-tab-btn'), signupTabBtn: document.getElementById('signup-tab-btn'), loginError: document.getElementById('login-error'), signupError: document.getElementById('signup-error'), serverList: document.getElementById('server-list'), messageList: document.getElementById('message-list'), channelNameDisplay: document.getElementById('channel-name-display'), channelTopicDisplay: document.getElementById('channel-topic-display'), chatFooter: document.getElementById('chat-footer'), chatForm: document.getElementById('chat-form'), messageInput: document.getElementById('message-input'), logoutBtn: document.getElementById('logout-btn'), notificationsBtn: document.getElementById('notifications-btn'), notifIndicator: document.getElementById('notif-indicator'), addChannelModal: document.getElementById('add-channel-modal'), createChannelForm: document.getElementById('create-channel-form'), joinChannelForm: document.getElementById('join-channel-form'), createTabBtn: document.getElementById('create-tab-btn'), joinTabBtn: document.getElementById('join-tab-btn'), invitationsModal: document.getElementById('invitations-modal'), invitationsList: document.getElementById('invitations-list'), editProfileModal: document.getElementById('edit-profile-modal'), editChannelModal: document.getElementById('edit-channel-modal'), channelSettingsBtn: document.getElementById('channel-settings-btn'), friendsModal: document.getElementById('friends-modal'), friendsListContent: document.getElementById('friends-list-content'), addFriendForm: document.getElementById('add-friend-form'), friendsListTab: document.getElementById('friends-list-tab'), addFriendTab: document.getElementById('add-friend-tab'), inviteToChannelBtn: document.getElementById('invite-to-channel-btn'), inviteToChannelModal: document.getElementById('invite-to-channel-modal'), inviteFriendsList: document.getElementById('invite-friends-list'), themeToggles: [document.getElementById('auth-theme-toggle'), document.getElementById('main-theme-toggle')] };
 
-        const showScreen = (screen) => {
-            authScreen.classList.add('hidden');
-            mainAppScreen.classList.add('hidden');
-            screen.classList.remove('hidden');
-            screen.classList.add('flex');
-        };
+        // --- GESTION DE L'AFFICHAGE ET DU THÈME ---
+        const showScreen = (screenName) => { ui.authScreen.classList.add('hidden'); ui.mainAppScreen.classList.add('hidden'); if (screenName === 'auth') { ui.authScreen.classList.remove('hidden'); ui.authScreen.classList.add('flex'); } else if (screenName === 'main') { ui.mainAppScreen.classList.remove('hidden'); ui.mainAppScreen.classList.add('flex'); } };
+        const sunIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`;
+        const moonIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
+        const applyTheme = (theme) => { document.documentElement.classList.toggle('dark', theme === 'dark'); ui.themeToggles.forEach(toggle => { toggle.innerHTML = theme === 'dark' ? sunIcon : moonIcon; }); };
+        const toggleTheme = () => { const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark'; localStorage.setItem('theme', newTheme); applyTheme(newTheme); };
+        ui.themeToggles.forEach(toggle => toggle.addEventListener('click', toggleTheme));
+        applyTheme(localStorage.getItem('theme') || 'light');
 
         // --- GESTION DE L'ÉTAT DE L'APPLICATION ---
-        
-        function cleanupListeners() {
-            if (unsubscribeMessages) unsubscribeMessages();
-            if (unsubscribeChannelList) unsubscribeChannelList();
-            if (unsubscribeInvitations) unsubscribeInvitations();
-        }
-        
+        const cleanupListeners = () => { unsubscribeListeners.forEach(unsubscribe => unsubscribe()); unsubscribeListeners = []; };
         onAuthStateChanged(auth, async (user) => {
             cleanupListeners();
-            if (user) {
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (userDoc.exists()) {
-                    userId = user.uid;
-                    const data = userDoc.data();
-                    userPseudo = data.pseudo;
-                    userPFP = data.pfp;
-                    showScreen(mainAppScreen);
-                    setupUserEnvironment(userId);
-                }
-            } else {
-                userId = null; userPseudo = null; userPFP = null; activeChannelId = null;
-                showScreen(authScreen);
-            }
+            if (user) { const userDoc = await getDoc(doc(db, "users", user.uid)); if (userDoc.exists()) { userId = user.uid; const data = userDoc.data(); userPseudo = data.pseudo; userPFP = data.pfp; showScreen('main'); setupUserEnvironment(userId); } else { signOut(auth); } } else { userId = null; userPseudo = null; userPFP = null; activeChannelId = null; showScreen('auth'); }
         });
-
-        function setupUserEnvironment(uid) {
-            listenForUserChannels(uid);
-            listenForInvitations(uid);
-        }
+        const setupUserEnvironment = (uid) => { listenForUserChannels(uid); listenForInvitations(uid); };
 
         // --- GESTION DES CANAUX ---
-
-        function listenForUserChannels(uid) {
+        const listenForUserChannels = (uid) => {
             const userDocRef = doc(db, "users", uid);
-            unsubscribeChannelList = onSnapshot(userDocRef, async (userDoc) => {
+            const unsubscribe = onSnapshot(userDocRef, async (userDoc) => {
                 if (!userDoc.exists()) return;
                 const channelIds = userDoc.data().channels || [];
-                
-                // Sauvegarder l'ancien canal actif pour le restaurer si possible
-                const previouslyActive = serverList.querySelector('.active')?.dataset.channelId;
-                
-                serverList.innerHTML = ''; // Vider la liste
-                
-                if (channelIds.length > 0) {
-                    for (const channelId of channelIds) {
-                        const channelDoc = await getDoc(doc(db, "channels", channelId));
-                        if (channelDoc.exists()) {
-                            renderChannelIcon(channelDoc.id, channelDoc.data());
-                        }
-                    }
-                } else {
-                    channelNameDisplay.textContent = "Aucun canal";
-                    channelTopicDisplay.textContent = "Créez ou rejoignez un canal pour commencer.";
-                    messageList.innerHTML = '<div class="text-center text-secondary m-auto">Aucun canal.</div>';
-                    chatFooter.classList.add('hidden');
-                }
-                
-                // Ajouter le bouton "+"
-                const addBtn = document.createElement('button');
-                addBtn.className = "server-icon mt-auto";
-                addBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12"x2="19" y2="12"></line></svg>`;
-                addBtn.onclick = () => addChannelModal.classList.remove('hidden');
-                serverList.appendChild(addBtn);
-
-                // Restaurer le canal actif
-                if (previouslyActive && channelIds.includes(previouslyActive)) {
-                    serverList.querySelector(`[data-channel-id="${previouslyActive}"]`).classList.add('active');
-                }
+                const previouslyActive = ui.serverList.querySelector('.active')?.dataset.channelId;
+                ui.serverList.innerHTML = '';
+                if (channelIds.length > 0) { for (const channelId of channelIds) { const channelDoc = await getDoc(doc(db, "channels", channelId)); if (channelDoc.exists()) { renderChannelIcon(channelDoc.id, channelDoc.data()); } } } else { ui.channelNameDisplay.textContent = "Aucun canal"; ui.channelTopicDisplay.textContent = "Créez ou rejoignez un canal."; ui.messageList.innerHTML = '<div class="text-center text-secondary m-auto">Aucun canal.</div>'; ui.chatFooter.classList.add('hidden'); }
+                const addBtn = document.createElement('button'); addBtn.className = "server-icon"; addBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12"x2="19" y2="12"></line></svg>`; addBtn.onclick = () => ui.addChannelModal.classList.remove('hidden'); ui.serverList.appendChild(addBtn);
+                const profileBtn = document.createElement('button'); profileBtn.className = "server-icon mt-auto"; profileBtn.innerHTML = `<img src="${userPFP || `https://placehold.co/64x64/e4e6eb/050505?text=${userPseudo.charAt(0)}`}" class="rounded-full">`; profileBtn.onclick = () => ui.editProfileModal.classList.remove('hidden'); ui.serverList.appendChild(profileBtn);
+                const friendsBtn = document.createElement('button'); friendsBtn.className = "server-icon"; friendsBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`; friendsBtn.onclick = () => { listenForFriends(userId); ui.friendsModal.classList.remove('hidden'); }; ui.serverList.appendChild(friendsBtn);
+                if (previouslyActive && channelIds.includes(previouslyActive)) { ui.serverList.querySelector(`[data-channel-id="${previouslyActive}"]`).classList.add('active'); }
             });
-        }
-
-        function renderChannelIcon(id, data) {
-            const icon = document.createElement('button');
-            icon.className = "server-icon";
-            icon.dataset.channelId = id;
-            if (data.iconUrl) {
-                icon.innerHTML = `<img src="${data.iconUrl}" alt="${data.name}" class="rounded-full">`;
-            } else {
-                icon.textContent = data.name.charAt(0).toUpperCase();
-            }
-            icon.addEventListener('click', () => switchActiveChannel(id, data));
-            serverList.appendChild(icon);
-        }
-
-        function switchActiveChannel(id, data) {
+            unsubscribeListeners.push(unsubscribe);
+        };
+        const renderChannelIcon = (id, data) => { const icon = document.createElement('button'); icon.className = "server-icon"; icon.dataset.channelId = id; if (data.iconUrl) { icon.innerHTML = `<img src="${data.iconUrl}" alt="${data.name}" class="rounded-full">`; } else { icon.textContent = data.name.charAt(0).toUpperCase(); } icon.addEventListener('click', () => switchActiveChannel(id)); ui.serverList.appendChild(icon); };
+        const switchActiveChannel = (id) => {
             if (activeChannelId === id) return;
             activeChannelId = id;
+            if (unsubscribeListeners[0]) unsubscribeListeners[0](); // Unsubscribe from old messages
+            if (unsubscribeListeners[1]) unsubscribeListeners[1](); // Unsubscribe from old channel data
             
-            // Mettre à jour l'UI des icônes
             document.querySelectorAll('.server-icon').forEach(i => i.classList.remove('active'));
             document.querySelector(`[data-channel-id="${id}"]`).classList.add('active');
-
-            // Mettre à jour l'en-tête
-            channelNameDisplay.textContent = data.name;
-            channelTopicDisplay.textContent = `Vous discutez dans #${data.name}`;
-            chatFooter.classList.remove('hidden');
-
-            // Changer l'écoute des messages
-            if (unsubscribeMessages) unsubscribeMessages();
+            
+            const channelDocRef = doc(db, "channels", id);
+            const unsubChannelData = onSnapshot(channelDocRef, (docSnap) => {
+                if (!docSnap.exists()) { activeChannelId = null; return; }
+                activeChannelData = docSnap.data();
+                ui.channelNameDisplay.textContent = activeChannelData.name;
+                ui.channelTopicDisplay.textContent = activeChannelData.isPublic ? `Code d'invitation: ${activeChannelData.inviteCode}` : "Canal privé";
+                ui.chatFooter.classList.remove('hidden');
+                ui.channelSettingsBtn.classList.toggle('hidden', activeChannelData.ownerId !== userId);
+                ui.inviteToChannelBtn.classList.toggle('hidden', activeChannelData.isPublic || activeChannelData.ownerId !== userId);
+            });
+            unsubscribeListeners[1] = unsubChannelData;
+            
             listenForMessages(`/channels/${id}/messages`);
-        }
-
-        document.getElementById('create-channel-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('new-channel-name').value;
-            const iconUrl = document.getElementById('new-channel-icon').value;
-            const isPublic = document.getElementById('new-channel-public').checked;
-            if (!name.trim()) return;
-
-            try {
-                // Créer le canal
-                const newChannelRef = await addDoc(collection(db, "channels"), {
-                    name, iconUrl, isPublic, ownerId: userId, createdAt: serverTimestamp()
-                });
-                
-                // Se faire rejoindre automatiquement
-                const channelId = newChannelRef.id;
-                await setDoc(doc(db, `channels/${channelId}/members`, userId), {
-                    pseudo: userPseudo, joinedAt: serverTimestamp()
-                });
-                await updateDoc(doc(db, "users", userId), {
-                    channels: arrayUnion(channelId)
-                });
-                
-                addChannelModal.classList.add('hidden');
-                e.target.reset();
-            } catch (error) {
-                console.error("Erreur de création de canal: ", error);
-                alert("Impossible de créer le canal.");
-            }
-        });
-
-        // --- GESTION DES MESSAGES (adaptée) ---
-        function listenForMessages(path) {
-            messageList.innerHTML = '<div class="text-center text-secondary m-auto">Chargement...</div>';
+        };
+        
+        // --- GESTION DES MESSAGES (Style iMessage) ---
+        const listenForMessages = (path) => {
+            ui.messageList.innerHTML = '<div class="text-center text-secondary m-auto">Chargement...</div>';
             const q = query(collection(db, path), orderBy("timestamp"));
-            let firstLoad = true;
-            unsubscribeMessages = onSnapshot(q, (snapshot) => {
-                if (firstLoad) {
-                    messageList.innerHTML = '';
-                    firstLoad = false;
-                }
-                snapshot.docChanges().forEach(change => {
-                    if (change.type === 'added') {
-                        // Logique d'affichage des messages (non modifiée)
-                        console.log(change.doc.data());
-                    }
-                });
-                if (snapshot.empty) {
-                     messageList.innerHTML = '<div class="text-center text-secondary m-auto">Aucun message. Soyez le premier !</div>';
-                }
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                if(snapshot.metadata.hasPendingWrites) return;
+                ui.messageList.innerHTML = '';
+                if (snapshot.empty) { ui.messageList.innerHTML = '<div class="text-center text-secondary m-auto">Aucun message. Soyez le premier !</div>'; return; }
+                snapshot.forEach(docSnap => renderMessage(docSnap.data()));
+                ui.messageList.scrollTop = ui.messageList.scrollHeight;
             });
-        }
-        
-        chatForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const text = messageInput.value.trim();
-            if (!text || !activeChannelId) return;
-
-            try {
-                const path = `/channels/${activeChannelId}/messages`;
-                await addDoc(collection(db, path), {
-                    text, senderId: userId, pseudo: userPseudo, pfp: userPFP, timestamp: serverTimestamp()
-                });
-                messageInput.value = '';
-            } catch (error) {
-                console.error("Erreur d'envoi de message:", error);
-            }
-        });
-        
-        // --- GESTION DES INVITATIONS ---
-        function listenForInvitations(uid) {
-            const q = query(collection(db, "invitations"), where("inviteeId", "==", uid), where("status", "==", "pending"));
-            unsubscribeInvitations = onSnapshot(q, (snapshot) => {
-                notifIndicator.classList.toggle('hidden', snapshot.empty);
-                invitationsList.innerHTML = '';
-                if(snapshot.empty) {
-                    invitationsList.innerHTML = '<p class="text-secondary">Aucune nouvelle invitation.</p>';
-                    return;
-                }
-                snapshot.forEach(docSnap => {
-                    renderInvitation(docSnap.id, docSnap.data());
-                });
-            });
-        }
-
-        function renderInvitation(id, data) {
-            const div = document.createElement('div');
-            div.className = 'p-3 bg-accent rounded-lg flex justify-between items-center';
-            div.innerHTML = `
-                <div>
-                    <p>Invitation de <strong>${data.inviterPseudo}</strong></p>
-                    <p class="text-sm text-secondary">à rejoindre le canal "${data.channelName}"</p>
-                </div>
-                <div class="flex gap-2">
-                    <button data-action="accept" class="bg-green-500 text-white px-3 py-1 rounded">✓</button>
-                    <button data-action="decline" class="bg-red-500 text-white px-3 py-1 rounded">✗</button>
+            unsubscribeListeners[0] = unsubscribe;
+        };
+        const renderMessage = (data) => {
+            const isMyMessage = data.senderId === userId;
+            const row = document.createElement('div');
+            row.className = `message-row ${isMyMessage ? 'my-message' : 'other-message'}`;
+            const time = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
+            const avatar = `<img src="${data.pfp || `https://placehold.co/64x64/e4e6eb/050505?text=${data.pseudo.charAt(0)}`}" class="message-avatar">`;
+            row.innerHTML = `
+                ${!isMyMessage ? avatar : ''}
+                <div class="message-content">
+                    ${!isMyMessage ? `<div class="message-pseudo">${data.pseudo}</div>` : ''}
+                    <div class="message-bubble">${data.text}</div>
+                    <div class="message-time">${time}</div>
                 </div>
             `;
-            div.addEventListener('click', async (e) => {
-                const action = e.target.dataset.action;
-                if (!action) return;
-                
-                e.target.disabled = true;
-                e.target.parentElement.querySelectorAll('button').forEach(b => b.disabled = true);
+            ui.messageList.appendChild(row);
+        };
+        ui.chatForm.addEventListener('submit', async (e) => { e.preventDefault(); const text = ui.messageInput.value.trim(); if (!text || !activeChannelId) return; try { await addDoc(collection(db, `/channels/${activeChannelId}/messages`), { text, senderId: userId, pseudo: userPseudo, pfp: userPFP, timestamp: serverTimestamp() }); ui.messageInput.value = ''; } catch (error) { console.error("Message send error:", error); } });
+        
+        // --- LOGIQUE DE CRÉATION/REJOINTE/MODIFICATION ---
+        const generateInviteCode = () => Math.random().toString(36).substring(2, 10);
+        ui.createChannelForm.addEventListener('submit', async (e) => { e.preventDefault(); const name = document.getElementById('new-channel-name').value; const iconUrl = document.getElementById('new-channel-icon').value; const isPrivate = document.getElementById('new-channel-private').checked; if (!name.trim()) return; try { const inviteCode = generateInviteCode(); const newChannelRef = await addDoc(collection(db, "channels"), { name, iconUrl, ownerId: userId, createdAt: serverTimestamp(), inviteCode, isPublic: !isPrivate }); const channelId = newChannelRef.id; await setDoc(doc(db, `channels/${channelId}/members`, userId), { pseudo: userPseudo, joinedAt: serverTimestamp() }); await updateDoc(doc(db, "users", userId), { channels: arrayUnion(channelId) }); ui.addChannelModal.classList.add('hidden'); e.target.reset(); } catch (error) { alert("Impossible de créer le canal."); } });
+        ui.joinChannelForm.addEventListener('submit', async (e) => { e.preventDefault(); const code = document.getElementById('join-channel-code').value.trim(); if (!code) return; try { const q = query(collection(db, "channels"), where("inviteCode", "==", code)); const querySnapshot = await getDocs(q); if (querySnapshot.empty) { alert("Aucun canal trouvé avec ce code."); return; } const channelDoc = querySnapshot.docs[0]; if (!channelDoc.data().isPublic) { alert("Ce canal est privé et requiert une invitation."); return; } const channelId = channelDoc.id; await updateDoc(doc(db, "users", userId), { channels: arrayUnion(channelId) }); await setDoc(doc(db, `channels/${channelId}/members`, userId), { pseudo: userPseudo, joinedAt: serverTimestamp() }); ui.addChannelModal.classList.add('hidden'); e.target.reset(); } catch (error) { alert("Impossible de rejoindre le canal."); } });
+        document.getElementById('edit-profile-form').addEventListener('submit', async (e) => { e.preventDefault(); const newPseudo = document.getElementById('edit-pseudo').value; const newPfp = document.getElementById('edit-pfp').value; try { await updateDoc(doc(db, "users", userId), { pseudo: newPseudo, pfp: newPfp }); userPseudo = newPseudo; userPFP = newPfp; ui.editProfileModal.classList.add('hidden'); } catch (error) { alert("Erreur de mise à jour."); } });
+        document.getElementById('edit-channel-form').addEventListener('submit', async (e) => { e.preventDefault(); const newName = document.getElementById('edit-channel-name').value; const newIcon = document.getElementById('edit-channel-icon').value; if (!activeChannelId) return; try { await updateDoc(doc(db, "channels", activeChannelId), { name: newName, iconUrl: newIcon }); ui.editChannelModal.classList.add('hidden'); } catch (error) { alert("Erreur de mise à jour."); } });
+        ui.channelSettingsBtn.addEventListener('click', () => ui.editChannelModal.classList.remove('hidden'));
+        
+        // --- LOGIQUE DE SUPPRESSION ---
+        const deleteConfirmInput = document.getElementById('delete-channel-confirm');
+        const deleteBtn = document.getElementById('delete-channel-btn');
+        deleteConfirmInput.addEventListener('input', () => { deleteBtn.disabled = deleteConfirmInput.value !== activeChannelData.name; });
+        deleteBtn.addEventListener('click', async () => {
+            if (!activeChannelId || !activeChannelData || deleteConfirmInput.value !== activeChannelData.name) return;
+            deleteBtn.disabled = true; deleteBtn.textContent = 'Suppression...';
+            try {
+                const batch = writeBatch(db);
+                // Supprimer les messages, membres, et le canal lui-même
+                const messagesQuery = await getDocs(collection(db, `channels/${activeChannelId}/messages`));
+                messagesQuery.forEach(d => batch.delete(d.ref));
+                const membersQuery = await getDocs(collection(db, `channels/${activeChannelId}/members`));
+                const memberIds = membersQuery.docs.map(d => d.id);
+                membersQuery.forEach(d => batch.delete(d.ref));
+                batch.delete(doc(db, "channels", activeChannelId));
+                await batch.commit();
 
-                if (action === 'accept') {
-                    await updateDoc(doc(db, `users/${userId}`), { channels: arrayUnion(data.channelId) });
-                    await setDoc(doc(db, `channels/${data.channelId}/members/${userId}`), { pseudo: userPseudo, joinedAt: serverTimestamp() });
+                // Mettre à jour les documents utilisateurs
+                for (const memberId of memberIds) {
+                    const userChannels = (await getDoc(doc(db, 'users', memberId))).data().channels;
+                    await updateDoc(doc(db, 'users', memberId), { channels: userChannels.filter(id => id !== activeChannelId) });
                 }
-                await updateDoc(doc(db, `invitations/${id}`), { status: action });
-            });
-            invitationsList.appendChild(div);
-        }
-
-        notificationsBtn.addEventListener('click', () => invitationsModal.classList.remove('hidden'));
-
-        // --- GESTION DES MODALES ---
-        document.querySelectorAll('.close-modal-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                btn.closest('.modal-overlay').classList.add('hidden');
-            });
+                
+                ui.editChannelModal.classList.add('hidden');
+                activeChannelId = null;
+            } catch (error) { alert('Erreur lors de la suppression.'); deleteBtn.disabled = false; deleteBtn.textContent = 'Supprimer ce canal'; }
         });
 
-        // --- AUTRES (Authentification, Thème, etc. - code largement inchangé) ---
-        // Le code de la partie authentification (formulaires login/signup) et de la gestion du thème reste le même.
-        // ... (collez ici le code des listeners pour loginForm, signupForm, theme-toggle, etc. de la version précédente) ...
-        logoutBtn.addEventListener('click', () => signOut(auth));
+        // --- GESTION DES AMIS ---
+        ui.addFriendForm.addEventListener('submit', async (e) => { e.preventDefault(); const targetPseudo = document.getElementById('add-friend-pseudo').value.trim(); if (!targetPseudo || targetPseudo.toLowerCase() === userPseudo.toLowerCase()) return; try { const q = query(collection(db, "usernames"), where("id", "==", targetPseudo.toLowerCase())); const userSnapshot = await getDocs(q); if (userSnapshot.empty) { alert("Utilisateur non trouvé."); return; } const targetUser = userSnapshot.docs[0].data(); const targetId = targetUser.uid; const friendRef = doc(db, `users/${userId}/friends/${targetId}`); await setDoc(friendRef, { status: 'pending', since: serverTimestamp() }); const targetRef = doc(db, `users/${targetId}/friends/${userId}`); await setDoc(targetRef, { status: 'received', since: serverTimestamp() }); alert('Demande envoyée !'); e.target.reset(); } catch (error) { alert("Erreur lors de l'ajout."); } });
+        const listenForFriends = (uid) => {
+            const friendsRef = collection(db, `users/${uid}/friends`);
+            const unsubscribe = onSnapshot(friendsRef, async (snapshot) => {
+                const sections = { accepted: [], pending: [], received: [] };
+                for (const docSnap of snapshot.docs) {
+                    const friendId = docSnap.id;
+                    const friendData = docSnap.data();
+                    const userDoc = await getDoc(doc(db, 'users', friendId));
+                    if (userDoc.exists()) {
+                        sections[friendData.status].push({ id: friendId, ...userDoc.data(), ...friendData });
+                    }
+                }
+                renderFriendsList(sections);
+            });
+            unsubscribeListeners.push(unsubscribe);
+        };
+        const renderFriendsList = (sections) => {
+            ui.friendsListContent.innerHTML = `
+                <h3 class="font-semibold mt-4">Amis (${sections.accepted.length})</h3>
+                <div class="space-y-2">${sections.accepted.map(f => `<div class="p-2 bg-accent rounded flex justify-between items-center"><span>${f.pseudo}</span></div>`).join('') || '<p class="text-sm text-secondary">Aucun ami pour le moment.</p>'}</div>
+                <h3 class="font-semibold mt-4">En attente (${sections.pending.length})</h3>
+                <div class="space-y-2">${sections.pending.map(f => `<div class="p-2 bg-accent rounded"><span>${f.pseudo}</span></div>`).join('') || '<p class="text-sm text-secondary">Aucune demande envoyée.</p>'}</div>
+                <h3 class="font-semibold mt-4">Demandes reçues (${sections.received.length})</h3>
+                <div class="space-y-2">${sections.received.map(f => `<div class="p-2 bg-accent rounded flex justify-between items-center"><span>${f.pseudo}</span><div class="flex gap-2"><button data-action="accept" data-id="${f.id}" class="bg-green-500 text-white px-2 py-1 rounded text-xs">✓</button><button data-action="decline" data-id="${f.id}" class="bg-red-500 text-white px-2 py-1 rounded text-xs">✗</button></div></div>`).join('') || '<p class="text-sm text-secondary">Aucune demande reçue.</p>'}</div>
+            `;
+        };
+        ui.friendsListContent.addEventListener('click', async (e) => { const action = e.target.dataset.action; const id = e.target.dataset.id; if (!action || !id) return; const batch = writeBatch(db); const myFriendRef = doc(db, `users/${userId}/friends/${id}`); const theirFriendRef = doc(db, `users/${id}/friends/${userId}`); if (action === 'accept') { batch.update(myFriendRef, { status: 'accepted' }); batch.update(theirFriendRef, { status: 'accepted' }); } else { batch.delete(myFriendRef); batch.delete(theirFriendRef); } await batch.commit(); });
+        
+        // --- GESTION DES INVITATIONS ---
+        const listenForInvitations = (uid) => { const q = query(collection(db, "invitations"), where("inviteeId", "==", uid), where("status", "==", "pending")); const unsubscribe = onSnapshot(q, (snapshot) => { ui.notifIndicator.classList.toggle('hidden', snapshot.empty); ui.invitationsList.innerHTML = ''; if(snapshot.empty) { ui.invitationsList.innerHTML = '<p class="text-secondary">Aucune nouvelle invitation.</p>'; return; } snapshot.forEach(docSnap => renderInvitation(docSnap.id, docSnap.data())); }); unsubscribeListeners.push(unsubscribe); };
+        const renderInvitation = (id, data) => { const div = document.createElement('div'); div.className = 'p-3 bg-accent rounded-lg flex justify-between items-center'; div.innerHTML = `<div><p>Invitation de <strong>${data.inviterPseudo}</strong></p><p class="text-sm text-secondary">à rejoindre "${data.channelName}"</p></div><div class="flex gap-2"><button data-action="accept" class="bg-green-500 text-white px-3 py-1 rounded">✓</button><button data-action="decline" class="bg-red-500 text-white px-3 py-1 rounded">✗</button></div>`; div.addEventListener('click', async (e) => { const action = e.target.dataset.action; if (!action) return; e.target.closest('div').innerHTML = 'Traitement...'; if (action === 'accept') { await updateDoc(doc(db, `users/${userId}`), { channels: arrayUnion(data.channelId) }); await setDoc(doc(db, `channels/${data.channelId}/members/${userId}`), { pseudo: userPseudo, joinedAt: serverTimestamp() }); } await updateDoc(doc(db, `invitations/${id}`), { status: action }); }); ui.invitationsList.appendChild(div); };
+        ui.notificationsBtn.addEventListener('click', () => ui.invitationsModal.classList.remove('hidden'));
+        ui.inviteToChannelBtn.addEventListener('click', async () => { const friendsRef = collection(db, `users/${userId}/friends`); const q = query(friendsRef, where("status", "==", "accepted")); const snapshot = await getDocs(q); ui.inviteFriendsList.innerHTML = ''; snapshot.forEach(async docSnap => { const friendId = docSnap.id; const friendDoc = await getDoc(doc(db, 'users', friendId)); if (!friendDoc.exists()) return; const friend = friendDoc.data(); const div = document.createElement('div'); div.className = 'p-2 bg-accent rounded flex justify-between items-center'; div.innerHTML = `<span>${friend.pseudo}</span><button data-id="${friendId}" class="bg-blue-500 text-white px-2 py-1 rounded text-xs">Inviter</button>`; ui.inviteFriendsList.appendChild(div); }); ui.inviteToChannelModal.classList.remove('hidden'); });
+        ui.inviteFriendsList.addEventListener('click', async (e) => { const targetId = e.target.dataset.id; if (!targetId || !activeChannelData) return; try { await addDoc(collection(db, 'invitations'), { channelId: activeChannelId, channelName: activeChannelData.name, inviterId: userId, inviterPseudo: userPseudo, inviteeId: targetId, status: 'pending', createdAt: serverTimestamp() }); e.target.textContent = 'Invité!'; e.target.disabled = true; } catch (err) { alert('Erreur lors de l\'envoi.'); } });
 
+        // --- GESTION DES MODALES ET ONGLETS ---
+        document.querySelectorAll('.close-modal-btn, .modal-overlay').forEach(el => { el.addEventListener('click', (e) => { if (e.target !== el) return; el.closest('.modal-overlay').classList.add('hidden'); }); });
+        const switchTab = (activeBtn, inactiveBtn, activeContent, inactiveContent) => { activeBtn.classList.add('active'); inactiveBtn.classList.remove('active'); activeContent.classList.remove('hidden'); inactiveContent.classList.add('hidden'); };
+        ui.createTabBtn.addEventListener('click', () => switchTab(ui.createTabBtn, ui.joinTabBtn, ui.createChannelForm, ui.joinChannelForm));
+        ui.joinTabBtn.addEventListener('click', () => switchTab(ui.joinTabBtn, ui.createTabBtn, ui.joinChannelForm, ui.createChannelForm));
+        ui.friendsListTab.addEventListener('click', () => switchTab(ui.friendsListTab, ui.addFriendTab, ui.friendsListContent, ui.addFriendForm));
+        ui.addFriendTab.addEventListener('click', () => switchTab(ui.addFriendTab, ui.friendsListTab, ui.addFriendForm, ui.friendsListContent));
+        switchTab(ui.createTabBtn, ui.joinTabBtn, ui.createChannelForm, ui.joinChannelForm);
+        switchTab(ui.friendsListTab, ui.addFriendTab, ui.friendsListContent, ui.addFriendForm);
+
+        // --- AUTHENTIFICATION ---
+        const displayAuthError = (el, msg) => { el.textContent = msg; el.classList.remove('hidden'); }; const clearAuthError = (el) => { el.textContent = ''; el.classList.add('hidden'); };
+        const switchAuthTab = (activeTab) => { if (activeTab === 'login') { ui.loginTabBtn.classList.add('active'); ui.signupTabBtn.classList.remove('active'); ui.loginForm.classList.remove('hidden'); ui.signupForm.classList.add('hidden'); clearAuthError(ui.signupError); } else { ui.signupTabBtn.classList.add('active'); ui.loginTabBtn.classList.remove('active'); ui.signupForm.classList.remove('hidden'); ui.loginForm.classList.add('hidden'); clearAuthError(ui.loginError); } };
+        ui.loginTabBtn.addEventListener('click', () => switchAuthTab('login')); ui.signupTabBtn.addEventListener('click', () => switchAuthTab('signup')); switchAuthTab('login');
+        ui.loginForm.addEventListener('submit', async (e) => { e.preventDefault(); clearAuthError(ui.loginError); const pseudo = document.getElementById('login-pseudo').value; const password = document.getElementById('login-password').value; try { const usernameSnap = await getDoc(doc(db, "usernames", pseudo.toLowerCase())); if (!usernameSnap.exists()) throw new Error("auth/user-not-found"); const { email } = (await getDoc(doc(db, "users", usernameSnap.data().uid))).data(); await signInWithEmailAndPassword(auth, email, password); } catch (error) { displayAuthError(ui.loginError, "Le pseudo ou le mot de passe est incorrect."); } });
+        ui.signupForm.addEventListener('submit', async (e) => { e.preventDefault(); clearAuthError(ui.signupError); const pseudo = document.getElementById('signup-pseudo').value; const password = document.getElementById('signup-password').value; const pfp = document.getElementById('signup-pfp').value; if (!/^[a-zA-Z0-9]{2,16}$/.test(pseudo)) { return displayAuthError(ui.signupError, "Pseudo invalide (2-16 lettres/chiffres)."); } try { const usernameSnap = await getDoc(doc(db, "usernames", pseudo.toLowerCase())); if (usernameSnap.exists()) return displayAuthError(ui.signupError, "Ce pseudo est déjà utilisé."); const dummyEmail = `${pseudo.toLowerCase()}@chat.app`; const userCredential = await createUserWithEmailAndPassword(auth, dummyEmail, password); const batch = writeBatch(db); batch.set(doc(db, "users", userCredential.user.uid), { pseudo, pfp, email: dummyEmail, channels: [] }); batch.set(doc(db, "usernames", pseudo.toLowerCase()), { uid: userCredential.user.uid }); await batch.commit(); } catch (error) { if (error.code === 'auth/weak-password') { displayAuthError(ui.signupError, "Le mot de passe doit faire au moins 6 caractères."); } else { displayAuthError(ui.signupError, "Erreur lors de la création du compte."); } } });
+        ui.logoutBtn.addEventListener('click', () => signOut(auth));
     </script>
 </body>
 </html>
