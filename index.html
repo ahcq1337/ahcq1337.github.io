@@ -16,7 +16,7 @@
             --other-message-bg: #e5e5ea; --other-message-text: #000000;
         }
         html.dark {
-            --bg-main: #1c1c1e; --bg-secondary: #2c2c2e; --bg-tertiary: #3a3a3c; --bg-accent: #2c2c2e;
+            --bg-main: #1c1c1e; --bg-secondary: #2c2c2e; --bg-tertiary: #3a3a3c; --bg-accent: #1c1c1e;
             --text-primary: #ffffff; --text-secondary: #8e8e93; --border-color: #3a3a3c;
             --my-message-bg: #0b84fe; --my-message-text: #ffffff;
             --other-message-bg: #3a3a3c; --other-message-text: #ffffff;
@@ -69,7 +69,10 @@
 
     <!-- #################### INTERFACE PRINCIPALE #################### -->
     <div id="main-app-screen" class="hidden h-screen w-screen flex text-primary">
-        <nav id="server-list" class="w-20 bg-gray-200 dark:bg-gray-900 p-3 flex flex-col items-center gap-3 overflow-y-auto"></nav>
+        <nav id="server-list" class="w-20 bg-gray-200 dark:bg-gray-900 p-3 flex flex-col items-center gap-3 overflow-y-auto">
+            <!-- Les icônes de canaux sont ajoutées ici -->
+            <div id="user-panel" class="mt-auto w-full"></div>
+        </nav>
         <div id="chat-container" class="flex-grow flex flex-col bg-secondary">
             <header class="bg-white dark:bg-gray-800 border-b border-border-color p-4 shadow-sm flex justify-between items-center flex-shrink-0">
                 <div><h1 id="channel-name-display" class="font-bold text-lg">Bienvenue !</h1><p id="channel-topic-display" class="text-xs text-secondary">Sélectionnez un canal.</p></div>
