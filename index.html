@@ -54,16 +54,16 @@
             border-color: var(--border-color);
         }
         .content-box h1, #chat-screen h1, #pseudo-display, .modal-content h2 {
-             color: var(--text-primary);
+            color: var(--text-primary);
         }
          .content-box p, .modal-content p {
-             color: var(--text-secondary);
-        }
+            color: var(--text-secondary);
+         }
         #room-display {
-             color: #2563eb;
+            color: #2563eb;
         }
          html.dark #room-display {
-             color: #60a5fa;
+            color: #60a5fa;
          }
         .content-box input, #message-input, #gif-search-input {
             background-color: var(--bg-main);
@@ -100,8 +100,8 @@
             width: 100%;
         }
         .system-message {
-             color: var(--system-message-text);
-             font-style: italic;
+            color: var(--system-message-text);
+            font-style: italic;
         }
         .date-separator {
             font-weight: 600;
@@ -116,15 +116,15 @@
             color: var(--text-secondary);
         }
         .time-text {
-             font-size: 0.75rem;
-             opacity: 0.75;
+            font-size: 0.75rem;
+            opacity: 0.75;
         }
         .my-message-bubble .time-text {
-             color: var(--my-message-text);
+            color: var(--my-message-text);
         }
          .other-message-bubble .time-text {
-             color: var(--text-secondary);
-        }
+            color: var(--text-secondary);
+         }
         #typing-indicator {
             color: var(--text-secondary);
             height: 1.5rem;
@@ -150,37 +150,40 @@
 </head>
 <body>
 
-    <!-- Auth Screen -->
     <div id="auth-screen" class="screen-container flex items-center justify-center h-screen">
         <div class="content-box p-8 rounded-xl shadow-lg w-full max-w-sm">
+            <div class="flex justify-center mb-6">
+                <img src="https://placehold.co/150x50/ffffff/050505?text=ChatLogo" alt="Logo" class="block dark:hidden h-12">
+                <img src="https://placehold.co/150x50/242526/e4e6eb?text=ChatLogo" alt="Logo" class="hidden dark:block h-12">
+            </div>
+
             <div class="flex border-b mb-6">
                 <button id="login-tab-btn" class="tab active flex-1 py-2 font-semibold">Se Connecter</button>
                 <button id="signup-tab-btn" class="tab flex-1 py-2 font-semibold text-secondary">Créer un compte</button>
             </div>
 
-            <!-- Login Form -->
             <form id="login-form">
-                 <h2 class="text-2xl font-bold mb-6 text-center">Connexion</h2>
-                 <input type="text" id="login-pseudo" placeholder="Pseudo" class="w-full p-3 border rounded-lg mb-4" required>
-                 <input type="password" id="login-password" placeholder="Mot de passe" class="w-full p-3 border rounded-lg mb-4" required>
-                 <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700">Se connecter</button>
+                <h2 class="text-2xl font-bold mb-4 text-center">Connexion</h2>
+                <p id="login-error" class="text-red-500 text-sm mb-4 text-center hidden"></p>
+                <input type="text" id="login-pseudo" placeholder="Pseudo" class="w-full p-3 border rounded-lg mb-4" required>
+                <input type="password" id="login-password" placeholder="Mot de passe" class="w-full p-3 border rounded-lg mb-4" required>
+                <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700">Se connecter</button>
             </form>
 
-            <!-- Sign-up Form -->
             <form id="signup-form" class="hidden">
-                <h2 class="text-2xl font-bold mb-6 text-center">Créer un Compte</h2>
+                <h2 class="text-2xl font-bold mb-4 text-center">Créer un Compte</h2>
+                <p id="signup-error" class="text-red-500 text-sm mb-4 text-center hidden"></p>
                 <input type="text" id="signup-pseudo" placeholder="Pseudo (2-16 caractères, sans espaces)" class="w-full p-3 border rounded-lg mb-4" required>
                 <input type="password" id="signup-password" placeholder="Mot de passe" class="w-full p-3 border rounded-lg mb-4" required>
                 <input type="url" id="signup-pfp" placeholder="URL de l'image (facultatif)" class="w-full p-3 border rounded-lg mb-4">
                 <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700">Créer le compte</button>
             </form>
-            <p id="version-display" class="text-xs text-center text-gray-400 mt-6">v1.0.15</p>
+            <p id="version-display" class="text-xs text-center text-gray-400 mt-6">v1.0.16</p>
         </div>
     </div>
     
-    <!-- Lobby Screen -->
     <div id="lobby-screen" class="hidden screen-container flex items-center justify-center h-screen">
-         <div class="content-box p-8 rounded-xl shadow-lg text-center w-full max-w-sm">
+        <div class="content-box p-8 rounded-xl shadow-lg text-center w-full max-w-sm">
             <h1 class="text-2xl font-bold mb-2">Bienvenue, <span id="lobby-pseudo"></span> !</h1>
             <p class="text-gray-600 mb-6">Entrez un numéro pour rejoindre un salon.</p>
             <form id="join-form">
@@ -199,13 +202,16 @@
     </div>
 
 
-    <!-- Chat Screen -->
     <div id="chat-screen" class="hidden flex flex-col h-screen">
         <header class="bg-white border-b p-4 shadow-sm">
             <div class="container mx-auto flex justify-between items-center">
-                <div>
-                    <h1 class="font-bold text-lg">Salon: <span id="room-display"></span></h1>
-                    <p class="text-xs text-secondary">Connecté en tant que: <span id="pseudo-display" class="font-semibold"></span></p>
+                <div class="flex items-center">
+                    <img src="https://placehold.co/150x50/ffffff/050505?text=ChatLogo" alt="Logo" class="block dark:hidden h-8 mr-4">
+                    <img src="https://placehold.co/150x50/242526/e4e6eb?text=ChatLogo" alt="Logo" class="hidden dark:block h-8 mr-4">
+                    <div>
+                        <h1 class="font-bold text-lg">Salon: <span id="room-display"></span></h1>
+                        <p class="text-xs text-secondary">Connecté en tant que: <span id="pseudo-display" class="font-semibold"></span></p>
+                    </div>
                 </div>
                 <div class="flex items-center gap-4">
                     <button id="participants-btn" class="p-2 rounded-full text-primary hover:bg-gray-200 dark:hover:bg-gray-700">
@@ -229,7 +235,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-image"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
                 </button>
                 <button type="button" id="gif-btn" class="p-3 text-gray-500 hover:text-blue-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-film"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M3 7.5h4"/><path d="M3 12h18"/><path d="M3 16.5h4"/><path d="M17 3v18"/><path d="M21 7.5h-4"/><path d="M21 16.5h-4"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-film"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M3 7.5h4"/><path d="M3 12h18"/><path d="M3 16.5h4"/><path d="M17 3v18"/><path d="M21 7.5h-4"/><path d="M21 16.5h-4"/></svg>
                 </button>
                 <input type="text" id="message-input" placeholder="Écrivez votre message..." class="w-full p-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500" autocomplete="off">
                 <button type="submit" class="bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 transition-colors disabled:bg-gray-400">
@@ -239,7 +245,6 @@
         </footer>
     </div>
     
-    <!-- All Modals -->
     <div id="gif-modal-overlay" class="modal-overlay fixed inset-0 z-50 hidden items-center justify-center">
         <div class="modal-content flex flex-col rounded-lg shadow-lg w-full max-w-lg max-h-[80vh]">
             <header class="p-4 rounded-t-lg flex justify-between items-center border-b">
@@ -279,13 +284,13 @@
 
         // --- Firebase Config and Initialization ---
         const firebaseConfig = {
-          apiKey: "AIzaSyDoejoSEXYWX_QL9-xd-YGS4ouaH3BkZ1I",
-          authDomain: "h3-x-dst.firebaseapp.com",
-          projectId: "h3-x-dst",
-          storageBucket: "h3-x-dst.firebasestorage.app",
-          messagingSenderId: "922426422571",
-          appId: "1:922426422571:web:5a13dd1b75dc07678e016e",
-          measurementId: "G-V2PBRM9X53"
+         apiKey: "AIzaSyDoejoSEXYWX_QL9-xd-YGS4ouaH3BkZ1I",
+         authDomain: "h3-x-dst.firebaseapp.com",
+         projectId: "h3-x-dst",
+         storageBucket: "h3-x-dst.firebasestorage.app",
+         messagingSenderId: "922426422571",
+         appId: "1:922426422571:web:5a13dd1b75dc07678e016e",
+         measurementId: "G-V2PBRM9X53"
         };
         const appId = 'default-chat-app';
         
@@ -314,6 +319,8 @@
         const signupTabBtn = document.getElementById('signup-tab-btn');
         const loginForm = document.getElementById('login-form');
         const signupForm = document.getElementById('signup-form');
+        const loginError = document.getElementById('login-error');
+        const signupError = document.getElementById('signup-error');
         const lobbyScreen = document.getElementById('lobby-screen');
         const lobbyPseudo = document.getElementById('lobby-pseudo');
         const joinForm = document.getElementById('join-form');
@@ -353,18 +360,31 @@
             screen.classList.add('flex');
         };
 
+        // --- Auth Error Display ---
+        const displayAuthError = (element, message) => {
+            element.textContent = message;
+            element.classList.remove('hidden');
+        };
+
+        const clearAuthError = (element) => {
+            element.textContent = '';
+            element.classList.add('hidden');
+        };
+
         // --- Auth Tabs ---
         loginTabBtn.addEventListener('click', () => {
             loginTabBtn.classList.add('active');
             signupTabBtn.classList.remove('active');
             loginForm.classList.remove('hidden');
             signupForm.classList.add('hidden');
+            clearAuthError(signupError); // Clear error when switching tabs
         });
         signupTabBtn.addEventListener('click', () => {
             signupTabBtn.classList.add('active');
             loginTabBtn.classList.remove('active');
             signupForm.classList.remove('hidden');
             loginForm.classList.add('hidden');
+            clearAuthError(loginError); // Clear error when switching tabs
         });
 
         // --- Theme Management ---
@@ -420,6 +440,7 @@
         const resetInactivityTimer = () => {
             clearTimeout(inactivityTimer);
             inactivityTimer = setTimeout(() => {
+                // Remplacer l'alerte par une action moins intrusive si souhaité
                 alert("Vous avez été déconnecté pour inactivité.");
                 leaveChat('inactivity');
             }, 300000); // 5 minutes
@@ -639,7 +660,7 @@
                 await addDoc(collection(db, messagesCollectionPath), { text: originalText, type: 'user', messageType: type, senderId: userId, pseudo: userPseudo, pfp: userPFP || '', timestamp: serverTimestamp() });
             } catch (error) {
                 console.error("Error sending message: ", error);
-                alert("Erreur lors de l'envoi du message.");
+                // Remplacer alert par une indication à l'utilisateur si nécessaire
                 if (type === 'text') { messageInput.value = originalText; }
             }
         };
@@ -647,34 +668,42 @@
         // --- Event Listeners ---
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            clearAuthError(loginError); // Clear previous errors
             const pseudo = document.getElementById('login-pseudo').value;
             const password = document.getElementById('login-password').value;
             const normalizedPseudo = pseudo.toLowerCase();
             const usernameRef = doc(db, "usernames", normalizedPseudo);
             try {
                 const usernameSnap = await getDoc(usernameRef);
-                if (!usernameSnap.exists()) { throw new Error("Pseudo ou mot de passe incorrect."); }
+                if (!usernameSnap.exists()) {
+                    throw new Error("Pseudo ou mot de passe incorrect.");
+                }
                 
                 const { uid } = usernameSnap.data();
                 const userDocRef = doc(db, "users", uid);
                 const userDoc = await getDoc(userDocRef);
-                if (!userDoc.exists()) { throw new Error("Profil utilisateur introuvable."); }
+                if (!userDoc.exists()) {
+                    throw new Error("Profil utilisateur introuvable.");
+                }
                 
                 const { email } = userDoc.data();
                 await signInWithEmailAndPassword(auth, email, password);
             } catch (error) {
-                alert("Erreur de connexion : " + error.message);
+                console.error("Login error:", error.code);
+                // Affiche un message générique pour la sécurité
+                displayAuthError(loginError, "Le pseudo ou le mot de passe est incorrect.");
             }
         });
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            clearAuthError(signupError); // Clear previous errors
             const pseudo = document.getElementById('signup-pseudo').value;
             const password = document.getElementById('signup-password').value;
             const pfp = document.getElementById('signup-pfp').value;
             
             const validationRegex = /^[a-zA-Z0-9]{2,16}$/;
             if (!validationRegex.test(pseudo)) {
-                alert("Le pseudo doit contenir entre 2 et 16 caractères et ne peut inclure que des lettres et des chiffres.");
+                displayAuthError(signupError, "Le pseudo doit contenir entre 2 et 16 caractères (lettres et chiffres uniquement).");
                 return;
             }
 
@@ -684,7 +713,7 @@
             try {
                 const usernameSnap = await getDoc(usernameRef);
                 if (usernameSnap.exists()) {
-                    alert("Ce pseudo est déjà utilisé. Veuillez en choisir un autre.");
+                    displayAuthError(signupError, "Ce pseudo est déjà utilisé. Veuillez en choisir un autre.");
                     return;
                 }
                 const dummyEmail = `${normalizedPseudo}@chat.app`;
@@ -698,7 +727,12 @@
                 
                 await batch.commit();
             } catch(error) {
-                 alert("Erreur de création de compte : " + error.message);
+                 console.error("Signup error:", error.code);
+                 if (error.code === 'auth/weak-password') {
+                    displayAuthError(signupError, "Le mot de passe doit contenir au moins 6 caractères.");
+                 } else {
+                    displayAuthError(signupError, "Une erreur est survenue lors de la création du compte.");
+                 }
             }
         });
         
@@ -731,8 +765,11 @@
             clearTimeout(giphySearchTimeout);
             giphySearchTimeout = setTimeout(() => { fetchGifs(e.target.value); }, 300);
         });
-        participantsBtn.addEventListener('click', () => participantsModalOverlay.classList.remove('hidden'));
-        closeParticipantsModalBtn.addEventListener('click', () => participantsModalOverlay.classList.add('hidden'));
+        participantsBtn.addEventListener('click', () => {
+            participantsModalOverlay.classList.remove('hidden');
+            participantsModalOverlay.classList.add('flex');
+        });
+        closeParticipantsModalBtn.addEventListener('click', closeModals);
         participantsModalOverlay.addEventListener('click', (e) => { if (e.target === participantsModalOverlay) closeModals() });
         
         whoIsOnlineBtn.addEventListener('click', async () => {
@@ -744,17 +781,24 @@
             } else {
                 const list = document.createElement('ul');
                 list.className = 'space-y-2';
+                let hasActiveRooms = false;
                 snapshot.forEach(doc => {
                     const participantCount = Object.keys(doc.data().participants || {}).length;
                     if(participantCount > 0) {
                         const li = document.createElement('li');
                         li.textContent = `Salon ${doc.id}: ${participantCount} participant(s)`;
                         list.appendChild(li);
+                        hasActiveRooms = true;
                     }
                 });
-                onlineListContent.appendChild(list);
+                if (hasActiveRooms) {
+                    onlineListContent.appendChild(list);
+                } else {
+                    onlineListContent.innerHTML = '<p class="text-secondary">Personne n\'est en ligne pour le moment.</p>';
+                }
             }
             onlineListModalOverlay.classList.remove('hidden');
+            onlineListModalOverlay.classList.add('flex');
         });
         closeOnlineListModalBtn.addEventListener('click', closeModals);
         onlineListModalOverlay.addEventListener('click', (e) => { if (e.target === onlineListModalOverlay) closeModals(); });
