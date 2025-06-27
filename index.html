@@ -139,17 +139,15 @@
         // --- GESTION DE L'ÉTAT DE L'APPLICATION ---
         const cleanupListeners = () => { unsubscribeListeners.forEach(unsubscribe => unsubscribe()); unsubscribeListeners = []; };
         
-        // CORRIGÉ: Logique `onAuthStateChanged` améliorée pour gérer la "race condition"
         onAuthStateChanged(auth, async (user) => {
             cleanupListeners();
             if (user) {
-                // Tente de récupérer le document utilisateur avec plusieurs essais
                 let userDoc;
                 let attempts = 0;
                 while (attempts < 5) {
                     userDoc = await getDoc(doc(db, "users", user.uid));
                     if (userDoc.exists()) break;
-                    await new Promise(resolve => setTimeout(resolve, 500)); // Attendre 500ms
+                    await new Promise(resolve => setTimeout(resolve, 500));
                     attempts++;
                 }
 
@@ -161,7 +159,6 @@
                     showScreen('main');
                     setupUserEnvironment(userId);
                 } else {
-                    // Si le document n'est toujours pas trouvé, il y a un vrai problème.
                     console.error("Document utilisateur introuvable pour l'UID:", user.uid);
                     showAlert("Votre compte n'a pas pu être initialisé correctement. Veuillez contacter le support.", "Erreur de Compte");
                     signOut(auth);
@@ -292,7 +289,6 @@
         });
 
         // --- GESTION DES AMIS ET RÔLES ---
-        // CORRIGÉ: Logique d'ajout d'ami utilise maintenant getDoc avec l'ID du document
         ui.addFriendForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const targetUsername = document.getElementById('add-friend-username').value.trim();
@@ -397,13 +393,12 @@
         const switchAuthTab = (activeTab) => { if (activeTab === 'login') { ui.loginTabBtn.classList.add('active', 'text-primary'); ui.loginTabBtn.classList.remove('text-secondary'); ui.signupTabBtn.classList.remove('active', 'text-primary'); ui.signupTabBtn.classList.add('text-secondary'); ui.loginForm.classList.remove('hidden'); ui.signupForm.classList.add('hidden'); clearAuthError(ui.signupError); } else { ui.signupTabBtn.classList.add('active', 'text-primary'); ui.signupTabBtn.classList.remove('text-secondary'); ui.loginTabBtn.classList.remove('active', 'text-primary'); ui.loginTabBtn.classList.add('text-secondary'); ui.signupForm.classList.remove('hidden'); ui.loginForm.classList.add('hidden'); clearAuthError(ui.loginError); } };
         ui.loginTabBtn.addEventListener('click', () => switchAuthTab('login')); ui.signupTabBtn.addEventListener('click', () => switchAuthTab('signup')); switchAuthTab('login');
         
-        // CORRIGÉ: Logique de connexion simplifiée et robuste
         ui.loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             clearAuthError(ui.loginError);
-            const username = document.getElementById('login-username').value;
+            const username = document.getElementById('login-username').value.trim();
             const password = document.getElementById('login-password').value;
-            const dummyEmail = `${username.toLowerCase().trim()}@chat.app`;
+            const dummyEmail = `${username.toLowerCase()}@chat.app`;
             try {
                 await signInWithEmailAndPassword(auth, dummyEmail, password);
                 // onAuthStateChanged s'occupera du reste
@@ -416,8 +411,8 @@
         ui.signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             clearAuthError(ui.signupError);
-            const username = document.getElementById('signup-username').value;
-            const displayName = document.getElementById('signup-displayname').value;
+            const username = document.getElementById('signup-username').value.trim();
+            const displayName = document.getElementById('signup-displayname').value.trim();
             const password = document.getElementById('signup-password').value;
             const pfp = document.getElementById('signup-pfp').value;
             if (!/^[a-zA-Z0-9_]{2,16}$/.test(username)) {
