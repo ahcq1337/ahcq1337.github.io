@@ -91,6 +91,19 @@
     <div id="invite-to-channel-modal" class="hidden modal-overlay fixed inset-0 z-50 flex items-center justify-center"><div class="modal-content rounded-lg shadow-lg w-full max-w-md"><header class="p-4 flex justify-between items-center border-b border-border-color"><h2 class="text-lg font-bold">Inviter des amis</h2><button class="close-modal-btn text-2xl font-bold">&times;</button></header><div id="invite-friends-list" class="p-6 space-y-2 max-h-96 overflow-y-auto"></div></div></div>
     <div id="user-profile-modal" class="hidden modal-overlay fixed inset-0 z-50 flex items-center justify-center"><div id="user-profile-content" class="modal-content rounded-lg shadow-lg w-full max-w-sm p-6 text-center"></div></div>
 
+    <!-- MODALE D'ALERTE GÉNÉRIQUE -->
+    <div id="alert-modal" class="hidden modal-overlay fixed inset-0 z-[100] flex items-center justify-center">
+        <div class="modal-content rounded-lg shadow-lg w-full max-w-sm">
+            <header class="p-4 flex justify-between items-center border-b border-border-color">
+                <h2 id="alert-modal-title" class="text-lg font-bold">Alerte</h2>
+                <button id="alert-modal-close" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white text-2xl font-bold">&times;</button>
+            </header>
+            <div class="p-6 text-center">
+                <p id="alert-modal-message"></p>
+            </div>
+        </div>
+    </div>
+
     <!-- #################### SCRIPT #################### -->
     <script type="module">
         // --- Imports Firebase ---
@@ -109,9 +122,9 @@
         try { app = initializeApp(firebaseConfig); db = getFirestore(app); auth = getAuth(app); } catch (e) { document.body.innerHTML = `<div class="p-8 text-red-500">Erreur Firebase: ${e.message}</div>`; }
         
         // --- Éléments UI ---
-        const ui = { authScreen: document.getElementById('auth-screen'), mainAppScreen: document.getElementById('main-app-screen'), loginForm: document.getElementById('login-form'), signupForm: document.getElementById('signup-form'), loginTabBtn: document.getElementById('login-tab-btn'), signupTabBtn: document.getElementById('signup-tab-btn'), loginError: document.getElementById('login-error'), signupError: document.getElementById('signup-error'), serverList: document.getElementById('server-list'), messageList: document.getElementById('message-list'), channelNameDisplay: document.getElementById('channel-name-display'), channelTopicDisplay: document.getElementById('channel-topic-display'), chatFooter: document.getElementById('chat-footer'), chatForm: document.getElementById('chat-form'), messageInput: document.getElementById('message-input'), logoutBtn: document.getElementById('logout-btn'), notificationsBtn: document.getElementById('notifications-btn'), notifIndicator: document.getElementById('notif-indicator'), addChannelModal: document.getElementById('add-channel-modal'), createChannelForm: document.getElementById('create-channel-form'), joinChannelForm: document.getElementById('join-channel-form'), createTabBtn: document.getElementById('create-tab-btn'), joinTabBtn: document.getElementById('join-tab-btn'), invitationsModal: document.getElementById('invitations-modal'), invitationsList: document.getElementById('invitations-list'), editProfileModal: document.getElementById('edit-profile-modal'), editChannelModal: document.getElementById('edit-channel-modal'), channelSettingsBtn: document.getElementById('channel-settings-btn'), memberManagementSection: document.getElementById('member-management-section'), friendsModal: document.getElementById('friends-modal'), friendsListContent: document.getElementById('friends-list-content'), addFriendForm: document.getElementById('add-friend-form'), friendsListTab: document.getElementById('friends-list-tab'), addFriendTab: document.getElementById('add-friend-tab'), inviteToChannelBtn: document.getElementById('invite-to-channel-btn'), inviteToChannelModal: document.getElementById('invite-to-channel-modal'), inviteFriendsList: document.getElementById('invite-friends-list'), userProfileModal: document.getElementById('user-profile-modal'), userProfileContent: document.getElementById('user-profile-content'), themeToggles: [document.getElementById('auth-theme-toggle'), document.getElementById('main-theme-toggle')] };
+        const ui = { authScreen: document.getElementById('auth-screen'), mainAppScreen: document.getElementById('main-app-screen'), loginForm: document.getElementById('login-form'), signupForm: document.getElementById('signup-form'), loginTabBtn: document.getElementById('login-tab-btn'), signupTabBtn: document.getElementById('signup-tab-btn'), loginError: document.getElementById('login-error'), signupError: document.getElementById('signup-error'), serverList: document.getElementById('server-list'), messageList: document.getElementById('message-list'), channelNameDisplay: document.getElementById('channel-name-display'), channelTopicDisplay: document.getElementById('channel-topic-display'), chatFooter: document.getElementById('chat-footer'), chatForm: document.getElementById('chat-form'), messageInput: document.getElementById('message-input'), logoutBtn: document.getElementById('logout-btn'), notificationsBtn: document.getElementById('notifications-btn'), notifIndicator: document.getElementById('notif-indicator'), addChannelModal: document.getElementById('add-channel-modal'), createChannelForm: document.getElementById('create-channel-form'), joinChannelForm: document.getElementById('join-channel-form'), createTabBtn: document.getElementById('create-tab-btn'), joinTabBtn: document.getElementById('join-tab-btn'), invitationsModal: document.getElementById('invitations-modal'), invitationsList: document.getElementById('invitations-list'), editProfileModal: document.getElementById('edit-profile-modal'), editChannelModal: document.getElementById('edit-channel-modal'), channelSettingsBtn: document.getElementById('channel-settings-btn'), memberManagementSection: document.getElementById('member-management-section'), friendsModal: document.getElementById('friends-modal'), friendsListContent: document.getElementById('friends-list-content'), addFriendForm: document.getElementById('add-friend-form'), friendsListTab: document.getElementById('friends-list-tab'), addFriendTab: document.getElementById('add-friend-tab'), inviteToChannelBtn: document.getElementById('invite-to-channel-btn'), inviteToChannelModal: document.getElementById('invite-to-channel-modal'), inviteFriendsList: document.getElementById('invite-friends-list'), userProfileModal: document.getElementById('user-profile-modal'), userProfileContent: document.getElementById('user-profile-content'), themeToggles: [document.getElementById('auth-theme-toggle'), document.getElementById('main-theme-toggle')], alertModal: document.getElementById('alert-modal'), alertModalTitle: document.getElementById('alert-modal-title'), alertModalMessage: document.getElementById('alert-modal-message'), alertModalClose: document.getElementById('alert-modal-close') };
 
-        // --- GESTION DE L'AFFICHAGE ET DU THÈME ---
+        // --- GESTION DE L'AFFICHAGE, THÈME ET ALERTES ---
         const showScreen = (screenName) => { ui.authScreen.classList.add('hidden'); ui.mainAppScreen.classList.add('hidden'); if (screenName === 'auth') { ui.authScreen.classList.remove('hidden'); ui.authScreen.classList.add('flex'); } else if (screenName === 'main') { ui.mainAppScreen.classList.remove('hidden'); ui.mainAppScreen.classList.add('flex'); } };
         const sunIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`;
         const moonIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
@@ -119,13 +132,49 @@
         const toggleTheme = () => { const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark'; localStorage.setItem('theme', newTheme); applyTheme(newTheme); };
         ui.themeToggles.forEach(toggle => toggle.addEventListener('click', toggleTheme));
         applyTheme(localStorage.getItem('theme') || 'light');
+        const showAlert = (message, title = 'Alerte') => { ui.alertModalTitle.textContent = title; ui.alertModalMessage.textContent = message; ui.alertModal.classList.remove('hidden'); };
+        ui.alertModalClose.addEventListener('click', () => ui.alertModal.classList.add('hidden'));
+        ui.alertModal.addEventListener('click', (e) => { if (e.target === ui.alertModal) ui.alertModal.classList.add('hidden'); });
 
         // --- GESTION DE L'ÉTAT DE L'APPLICATION ---
         const cleanupListeners = () => { unsubscribeListeners.forEach(unsubscribe => unsubscribe()); unsubscribeListeners = []; };
+        
+        // CORRIGÉ: Logique `onAuthStateChanged` améliorée pour gérer la "race condition"
         onAuthStateChanged(auth, async (user) => {
             cleanupListeners();
-            if (user) { const userDoc = await getDoc(doc(db, "users", user.uid)); if (userDoc.exists()) { userId = user.uid; const data = userDoc.data(); userDisplayName = data.displayName; userPFP = data.pfp; showScreen('main'); setupUserEnvironment(userId); } else { signOut(auth); } } else { userId = null; userDisplayName = null; userPFP = null; activeChannelId = null; showScreen('auth'); }
+            if (user) {
+                // Tente de récupérer le document utilisateur avec plusieurs essais
+                let userDoc;
+                let attempts = 0;
+                while (attempts < 5) {
+                    userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) break;
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Attendre 500ms
+                    attempts++;
+                }
+
+                if (userDoc && userDoc.exists()) {
+                    userId = user.uid;
+                    const data = userDoc.data();
+                    userDisplayName = data.displayName;
+                    userPFP = data.pfp;
+                    showScreen('main');
+                    setupUserEnvironment(userId);
+                } else {
+                    // Si le document n'est toujours pas trouvé, il y a un vrai problème.
+                    console.error("Document utilisateur introuvable pour l'UID:", user.uid);
+                    showAlert("Votre compte n'a pas pu être initialisé correctement. Veuillez contacter le support.", "Erreur de Compte");
+                    signOut(auth);
+                }
+            } else {
+                userId = null;
+                userDisplayName = null;
+                userPFP = null;
+                activeChannelId = null;
+                showScreen('auth');
+            }
         });
+
         const setupUserEnvironment = (uid) => { listenForUserChannels(uid); listenForInvitations(uid); };
 
         // --- GESTION DES CANAUX ---
@@ -143,13 +192,18 @@
                 
                 const addBtn = document.createElement('button'); addBtn.className = "server-icon"; addBtn.title="Ajouter un canal"; addBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12"x2="19" y2="12"></line></svg>`; addBtn.onclick = () => ui.addChannelModal.classList.remove('hidden'); ui.serverList.appendChild(addBtn);
                 const friendsBtn = document.createElement('button'); friendsBtn.className = "server-icon"; friendsBtn.title="Amis"; friendsBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`; friendsBtn.onclick = () => { listenForFriends(userId); ui.friendsModal.classList.remove('hidden'); }; ui.serverList.appendChild(friendsBtn);
-                const profileBtn = document.createElement('button'); profileBtn.className = "server-icon mt-auto"; profileBtn.title="Modifier le profil"; profileBtn.innerHTML = `<img src="${userPFP || `https://placehold.co/64x64/e4e6eb/050505?text=${userDisplayName.charAt(0)}`}" class="rounded-full">`; profileBtn.onclick = () => ui.editProfileModal.classList.remove('hidden'); ui.serverList.appendChild(profileBtn);
+                
+                const profileBtn = document.createElement('button'); profileBtn.className = "server-icon mt-auto"; profileBtn.title="Modifier le profil";
+                const displayNameInitial = (userDisplayName || '?').charAt(0).toUpperCase();
+                profileBtn.innerHTML = `<img src="${userPFP || `https://placehold.co/64x64/e4e6eb/050505?text=${displayNameInitial}`}" class="rounded-full" onerror="this.onerror=null;this.src='https://placehold.co/64x64/e4e6eb/050505?text=${displayNameInitial}';">`;
+                profileBtn.onclick = () => ui.editProfileModal.classList.remove('hidden');
+                ui.serverList.appendChild(profileBtn);
                 
                 if (previouslyActive && channelIds.includes(previouslyActive)) { ui.serverList.querySelector(`[data-channel-id="${previouslyActive}"]`).classList.add('active'); }
             });
             unsubscribeListeners.push(unsubscribe);
         };
-        const renderChannelIcon = (id, data) => { const icon = document.createElement('button'); icon.className = "server-icon"; icon.dataset.channelId = id; if (data.iconUrl) { icon.innerHTML = `<img src="${data.iconUrl}" alt="${data.name}" class="rounded-full">`; } else { icon.textContent = data.name.charAt(0).toUpperCase(); } icon.addEventListener('click', () => switchActiveChannel(id)); ui.serverList.appendChild(icon); };
+        const renderChannelIcon = (id, data) => { const icon = document.createElement('button'); icon.className = "server-icon"; icon.dataset.channelId = id; if (data.iconUrl) { icon.innerHTML = `<img src="${data.iconUrl}" alt="${data.name}" class="rounded-full" onerror="this.onerror=null;this.textContent='${data.name.charAt(0).toUpperCase()}';this.classList.add('flex', 'items-center', 'justify-center');">`; } else { icon.textContent = data.name.charAt(0).toUpperCase(); } icon.addEventListener('click', () => switchActiveChannel(id)); ui.serverList.appendChild(icon); };
         const switchActiveChannel = (id) => {
             if (activeChannelId === id) return;
             activeChannelId = id;
@@ -174,7 +228,7 @@
             listenForMessages(`/channels/${id}/messages`);
         };
         
-        // --- GESTION DES MESSAGES (Style iMessage) ---
+        // --- GESTION DES MESSAGES ---
         const listenForMessages = (path) => {
             ui.messageList.innerHTML = '<div class="text-center text-secondary m-auto">Chargement...</div>';
             const q = query(collection(db, path), orderBy("timestamp"));
@@ -193,7 +247,8 @@
             const row = document.createElement('div');
             row.className = `message-row ${isMyMessage ? 'my-message' : 'other-message'}`;
             const time = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
-            const avatar = `<img src="${data.pfp || `https://placehold.co/64x64/e4e6eb/050505?text=${data.displayName.charAt(0)}`}" class="message-avatar" data-user-id="${data.senderId}">`;
+            const displayNameInitial = (data.displayName || '?').charAt(0).toUpperCase();
+            const avatar = `<img src="${data.pfp || `https://placehold.co/64x64/e4e6eb/050505?text=${displayNameInitial}`}" class="message-avatar" data-user-id="${data.senderId}" onerror="this.onerror=null;this.src='https://placehold.co/64x64/e4e6eb/050505?text=${displayNameInitial}';">`;
             row.innerHTML = `<div class="message-content">${!isMyMessage ? `<div class="message-pseudo" data-user-id="${data.senderId}">${data.displayName}</div>` : ''}<div class="message-bubble">${data.text}</div><div class="message-time">${time}</div></div>`;
             if (!isMyMessage) row.insertAdjacentHTML('afterbegin', avatar);
             ui.messageList.appendChild(row);
@@ -203,10 +258,10 @@
 
         // --- LOGIQUE DE CRÉATION/REJOINTE/MODIFICATION ---
         const generateInviteCode = () => Array(8).fill(0).map(() => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random() * 62)]).join('');
-        ui.createChannelForm.addEventListener('submit', async (e) => { e.preventDefault(); const name = document.getElementById('new-channel-name').value; const iconUrl = document.getElementById('new-channel-icon').value; const isPrivate = document.getElementById('new-channel-private').checked; if (!name.trim()) return; try { const inviteCode = generateInviteCode(); const newChannelRef = await addDoc(collection(db, "channels"), { name, iconUrl, ownerId: userId, createdAt: serverTimestamp(), inviteCode, isPublic: !isPrivate, bannedUsers: [] }); const channelId = newChannelRef.id; await setDoc(doc(db, `channels/${channelId}/members`, userId), { displayName: userDisplayName, role: 'owner', joinedAt: serverTimestamp() }); await updateDoc(doc(db, "users", userId), { channels: arrayUnion(channelId) }); ui.addChannelModal.classList.add('hidden'); e.target.reset(); } catch (error) { alert("Impossible de créer le canal."); } });
-        ui.joinChannelForm.addEventListener('submit', async (e) => { e.preventDefault(); const code = document.getElementById('join-channel-code').value.trim(); if (!code) return; try { const q = query(collection(db, "channels"), where("inviteCode", "==", code)); const querySnapshot = await getDocs(q); if (querySnapshot.empty) { alert("Aucun canal trouvé avec ce code."); return; } const channelDoc = querySnapshot.docs[0]; const channelData = channelDoc.data(); if (!channelData.isPublic) { alert("Ce canal est privé et requiert une invitation."); return; } if (channelData.bannedUsers.includes(userId)) { alert("Vous avez été banni de ce canal."); return; } const channelId = channelDoc.id; await updateDoc(doc(db, "users", userId), { channels: arrayUnion(channelId) }); await setDoc(doc(db, `channels/${channelId}/members`, userId), { displayName: userDisplayName, role: 'member', joinedAt: serverTimestamp() }); ui.addChannelModal.classList.add('hidden'); e.target.reset(); } catch (error) { alert("Impossible de rejoindre le canal."); } });
-        document.getElementById('edit-profile-form').addEventListener('submit', async (e) => { e.preventDefault(); const newDisplayName = document.getElementById('edit-displayname').value; const newPfp = document.getElementById('edit-pfp').value; try { await updateDoc(doc(db, "users", userId), { displayName: newDisplayName, pfp: newPfp }); ui.editProfileModal.classList.add('hidden'); } catch (error) { alert("Erreur de mise à jour."); } });
-        document.getElementById('edit-channel-form').addEventListener('submit', async (e) => { e.preventDefault(); const newName = document.getElementById('edit-channel-name').value; const newIcon = document.getElementById('edit-channel-icon').value; if (!activeChannelId) return; try { await updateDoc(doc(db, "channels", activeChannelId), { name: newName, iconUrl: newIcon }); ui.editChannelModal.classList.add('hidden'); } catch (error) { alert("Erreur de mise à jour."); } });
+        ui.createChannelForm.addEventListener('submit', async (e) => { e.preventDefault(); const name = document.getElementById('new-channel-name').value; const iconUrl = document.getElementById('new-channel-icon').value; const isPrivate = document.getElementById('new-channel-private').checked; if (!name.trim()) return; try { const inviteCode = generateInviteCode(); const newChannelRef = await addDoc(collection(db, "channels"), { name, iconUrl, ownerId: userId, createdAt: serverTimestamp(), inviteCode, isPublic: !isPrivate, bannedUsers: [] }); const channelId = newChannelRef.id; await setDoc(doc(db, `channels/${channelId}/members`, userId), { displayName: userDisplayName, role: 'owner', joinedAt: serverTimestamp() }); await updateDoc(doc(db, "users", userId), { channels: arrayUnion(channelId) }); ui.addChannelModal.classList.add('hidden'); e.target.reset(); } catch (error) { console.error("Create channel error:", error); showAlert("Impossible de créer le canal."); } });
+        ui.joinChannelForm.addEventListener('submit', async (e) => { e.preventDefault(); const code = document.getElementById('join-channel-code').value.trim(); if (!code) return; try { const q = query(collection(db, "channels"), where("inviteCode", "==", code)); const querySnapshot = await getDocs(q); if (querySnapshot.empty) { showAlert("Aucun canal trouvé avec ce code."); return; } const channelDoc = querySnapshot.docs[0]; const channelData = channelDoc.data(); if (!channelData.isPublic) { showAlert("Ce canal est privé et requiert une invitation."); return; } if (channelData.bannedUsers.includes(userId)) { showAlert("Vous avez été banni de ce canal."); return; } const channelId = channelDoc.id; await updateDoc(doc(db, "users", userId), { channels: arrayUnion(channelId) }); await setDoc(doc(db, `channels/${channelId}/members`, userId), { displayName: userDisplayName, role: 'member', joinedAt: serverTimestamp() }); ui.addChannelModal.classList.add('hidden'); e.target.reset(); } catch (error) { console.error("Join channel error:", error); showAlert("Impossible de rejoindre le canal."); } });
+        document.getElementById('edit-profile-form').addEventListener('submit', async (e) => { e.preventDefault(); const newDisplayName = document.getElementById('edit-displayname').value; const newPfp = document.getElementById('edit-pfp').value; try { await updateDoc(doc(db, "users", userId), { displayName: newDisplayName, pfp: newPfp }); ui.editProfileModal.classList.add('hidden'); } catch (error) { console.error("Edit profile error:", error); showAlert("Erreur de mise à jour."); } });
+        document.getElementById('edit-channel-form').addEventListener('submit', async (e) => { e.preventDefault(); const newName = document.getElementById('edit-channel-name').value; const newIcon = document.getElementById('edit-channel-icon').value; if (!activeChannelId) return; try { await updateDoc(doc(db, "channels", activeChannelId), { name: newName, iconUrl: newIcon }); ui.editChannelModal.classList.add('hidden'); } catch (error) { console.error("Edit channel error:", error); showAlert("Erreur de mise à jour."); } });
         ui.channelSettingsBtn.addEventListener('click', () => { listenForChannelMembers(activeChannelId); ui.editChannelModal.classList.remove('hidden'); });
         
         // --- LOGIQUE DE SUPPRESSION ---
@@ -233,11 +288,36 @@
                 
                 ui.editChannelModal.classList.add('hidden');
                 activeChannelId = null;
-            } catch (error) { console.error(error); alert('Erreur lors de la suppression.'); deleteBtn.disabled = false; deleteBtn.textContent = 'Supprimer ce canal'; }
+            } catch (error) { console.error("Delete channel error:", error); showAlert('Erreur lors de la suppression.'); deleteBtn.disabled = false; deleteBtn.textContent = 'Supprimer ce canal'; }
         });
 
         // --- GESTION DES AMIS ET RÔLES ---
-        ui.addFriendForm.addEventListener('submit', async (e) => { e.preventDefault(); const targetUsername = document.getElementById('add-friend-username').value.trim(); if (!targetUsername || targetUsername.toLowerCase() === userDisplayName.toLowerCase()) return; try { const q = query(collection(db, "usernames"), where("id", "==", targetUsername.toLowerCase())); const userSnapshot = await getDocs(q); if (userSnapshot.empty) { alert("Utilisateur non trouvé."); return; } const targetUser = userSnapshot.docs[0].data(); const targetId = targetUser.uid; const friendRef = doc(db, `users/${userId}/friends/${targetId}`); await setDoc(friendRef, { status: 'pending', since: serverTimestamp() }); const targetRef = doc(db, `users/${targetId}/friends/${userId}`); await setDoc(targetRef, { status: 'received', since: serverTimestamp() }); alert('Demande envoyée !'); e.target.reset(); } catch (error) { alert("Erreur lors de l'ajout."); } });
+        // CORRIGÉ: Logique d'ajout d'ami utilise maintenant getDoc avec l'ID du document
+        ui.addFriendForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const targetUsername = document.getElementById('add-friend-username').value.trim();
+            if (!targetUsername || targetUsername.toLowerCase() === userDisplayName.toLowerCase()) return;
+            try {
+                const userDocRef = doc(db, "usernames", targetUsername.toLowerCase());
+                const userSnapshot = await getDoc(userDocRef);
+
+                if (!userSnapshot.exists()) {
+                    showAlert("Utilisateur non trouvé.");
+                    return;
+                }
+                const targetId = userSnapshot.data().uid;
+                const friendRef = doc(db, `users/${userId}/friends/${targetId}`);
+                await setDoc(friendRef, { status: 'pending', since: serverTimestamp() });
+                const targetRef = doc(db, `users/${targetId}/friends/${userId}`);
+                await setDoc(targetRef, { status: 'received', since: serverTimestamp() });
+                showAlert('Demande envoyée !', 'Succès');
+                e.target.reset();
+            } catch (error) {
+                console.error("Add friend error:", error);
+                showAlert("Erreur lors de l'ajout de l'ami.");
+            }
+        });
+
         const listenForFriends = (uid) => { const friendsRef = collection(db, `users/${uid}/friends`); const unsubscribe = onSnapshot(friendsRef, async (snapshot) => { const sections = { accepted: [], pending: [], received: [] }; for (const docSnap of snapshot.docs) { const friendId = docSnap.id; const friendData = docSnap.data(); const userDoc = await getDoc(doc(db, 'users', friendId)); if (userDoc.exists()) { sections[friendData.status].push({ id: friendId, ...userDoc.data(), ...friendData }); } } renderFriendsList(sections); }); unsubscribeListeners.push(unsubscribe); };
         const renderFriendsList = (sections) => { ui.friendsListContent.innerHTML = `<h3 class="font-semibold mt-4">Amis (${sections.accepted.length})</h3><div class="space-y-2">${sections.accepted.map(f => `<div class="p-2 bg-accent rounded flex justify-between items-center"><span>${f.displayName}</span></div>`).join('') || '<p class="text-sm text-secondary">Aucun ami.</p>'}</div><h3 class="font-semibold mt-4">En attente (${sections.pending.length})</h3><div class="space-y-2">${sections.pending.map(f => `<div class="p-2 bg-accent rounded"><span>${f.displayName}</span></div>`).join('') || '<p class="text-sm text-secondary">Aucune demande.</p>'}</div><h3 class="font-semibold mt-4">Demandes reçues (${sections.received.length})</h3><div class="space-y-2">${sections.received.map(f => `<div class="p-2 bg-accent rounded flex justify-between items-center"><span>${f.displayName}</span><div class="flex gap-2"><button data-action="accept" data-id="${f.id}" class="bg-green-500 text-white px-2 py-1 rounded text-xs">✓</button><button data-action="decline" data-id="${f.id}" class="bg-red-500 text-white px-2 py-1 rounded text-xs">✗</button></div></div>`).join('') || '<p class="text-sm text-secondary">Aucune demande.</p>'}</div>`; };
         ui.friendsListContent.addEventListener('click', async (e) => { const action = e.target.dataset.action; const id = e.target.dataset.id; if (!action || !id) return; const batch = writeBatch(db); const myFriendRef = doc(db, `users/${userId}/friends/${id}`); const theirFriendRef = doc(db, `users/${id}/friends/${userId}`); if (action === 'accept') { batch.update(myFriendRef, { status: 'accepted' }); batch.update(theirFriendRef, { status: 'accepted' }); } else { batch.delete(myFriendRef); batch.delete(theirFriendRef); } await batch.commit(); });
@@ -263,7 +343,7 @@
         const renderInvitation = (id, data) => { const div = document.createElement('div'); div.className = 'p-3 bg-accent rounded-lg flex justify-between items-center'; div.innerHTML = `<div><p>Invitation de <strong>${data.inviterDisplayName}</strong></p><p class="text-sm text-secondary">à rejoindre "${data.channelName}"</p></div><div class="flex gap-2"><button data-action="accept" class="bg-green-500 text-white px-3 py-1 rounded">✓</button><button data-action="decline" class="bg-red-500 text-white px-3 py-1 rounded">✗</button></div>`; div.addEventListener('click', async (e) => { const action = e.target.dataset.action; if (!action) return; e.target.closest('div').innerHTML = 'Traitement...'; if (action === 'accept') { await updateDoc(doc(db, `users/${userId}`), { channels: arrayUnion(data.channelId) }); await setDoc(doc(db, `channels/${data.channelId}/members/${userId}`), { displayName: userDisplayName, role: 'member', joinedAt: serverTimestamp() }); } await updateDoc(doc(db, `invitations/${id}`), { status: action }); }); ui.invitationsList.appendChild(div); };
         ui.notificationsBtn.addEventListener('click', () => ui.invitationsModal.classList.remove('hidden'));
         ui.inviteToChannelBtn.addEventListener('click', async () => { const friendsRef = collection(db, `users/${userId}/friends`); const q = query(friendsRef, where("status", "==", "accepted")); const snapshot = await getDocs(q); ui.inviteFriendsList.innerHTML = ''; snapshot.forEach(async docSnap => { const friendId = docSnap.id; const friendDoc = await getDoc(doc(db, 'users', friendId)); if (!friendDoc.exists()) return; const friend = friendDoc.data(); const div = document.createElement('div'); div.className = 'p-2 bg-accent rounded flex justify-between items-center'; div.innerHTML = `<span>${friend.displayName}</span><button data-id="${friendId}" class="bg-blue-500 text-white px-2 py-1 rounded text-xs">Inviter</button>`; ui.inviteFriendsList.appendChild(div); }); ui.inviteToChannelModal.classList.remove('hidden'); });
-        ui.inviteFriendsList.addEventListener('click', async (e) => { const targetId = e.target.dataset.id; if (!targetId || !activeChannelData) return; try { await addDoc(collection(db, 'invitations'), { channelId: activeChannelId, channelName: activeChannelData.name, inviterId: userId, inviterDisplayName: userDisplayName, inviteeId: targetId, status: 'pending', createdAt: serverTimestamp() }); e.target.textContent = 'Invité!'; e.target.disabled = true; } catch (err) { alert('Erreur lors de l\'envoi.'); } });
+        ui.inviteFriendsList.addEventListener('click', async (e) => { const targetId = e.target.dataset.id; if (!targetId || !activeChannelData) return; try { await addDoc(collection(db, 'invitations'), { channelId: activeChannelId, channelName: activeChannelData.name, inviterId: userId, inviterDisplayName: userDisplayName, inviteeId: targetId, status: 'pending', createdAt: serverTimestamp() }); e.target.textContent = 'Invité!'; e.target.disabled = true; } catch (err) { console.error("Invite friend error:", err); showAlert('Erreur lors de l\'envoi.'); } });
 
         // --- GESTION DES PROFILS UTILISATEUR ---
         const showUserProfile = async (targetUserId) => {
@@ -273,7 +353,6 @@
             
             let badgesHTML = (userData.badges || []).map(badgeId => renderBadge(badgeId)).join('');
             
-            // Check for channel-specific roles
             if (activeChannelId) {
                 const memberDoc = await getDoc(doc(db, `channels/${activeChannelId}/members/${targetUserId}`));
                 if (memberDoc.exists()) {
@@ -282,9 +361,9 @@
                     if (memberData.role === 'admin') badgesHTML += renderBadge('admin');
                 }
             }
-
+            const displayNameInitial = (userData.displayName || '?').charAt(0).toUpperCase();
             ui.userProfileContent.innerHTML = `
-                <img src="${userData.pfp || `https://placehold.co/128x128/e4e6eb/050505?text=${userData.displayName.charAt(0)}`}" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-secondary">
+                <img src="${userData.pfp || `https://placehold.co/128x128/e4e6eb/050505?text=${displayNameInitial}`}" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-secondary" onerror="this.onerror=null;this.src='https://placehold.co/128x128/e4e6eb/050505?text=${displayNameInitial}';">
                 <h2 class="text-xl font-bold">${userData.displayName}</h2>
                 <p class="text-sm text-secondary mb-4">@${userData.username}</p>
                 <div class="flex justify-center gap-2 flex-wrap">${badgesHTML}</div>
@@ -305,7 +384,7 @@
 
         // --- GESTION DES MODALES ET ONGLETS ---
         document.querySelectorAll('.close-modal-btn, .modal-overlay').forEach(el => { el.addEventListener('click', (e) => { if (e.target !== el) return; el.closest('.modal-overlay').classList.add('hidden'); }); });
-        const switchTab = (activeBtn, inactiveBtn, activeContent, inactiveContent) => { activeBtn.classList.add('active'); inactiveBtn.classList.remove('active'); activeContent.classList.remove('hidden'); inactiveContent.classList.add('hidden'); };
+        const switchTab = (activeBtn, inactiveBtn, activeContent, inactiveContent) => { activeBtn.classList.add('active', 'text-primary'); activeBtn.classList.remove('text-secondary'); inactiveBtn.classList.remove('active', 'text-primary'); inactiveBtn.classList.add('text-secondary'); activeContent.classList.remove('hidden'); inactiveContent.classList.add('hidden'); };
         ui.createTabBtn.addEventListener('click', () => switchTab(ui.createTabBtn, ui.joinTabBtn, ui.createChannelForm, ui.joinChannelForm));
         ui.joinTabBtn.addEventListener('click', () => switchTab(ui.joinTabBtn, ui.createTabBtn, ui.joinChannelForm, ui.createChannelForm));
         ui.friendsListTab.addEventListener('click', () => switchTab(ui.friendsListTab, ui.addFriendTab, ui.friendsListContent, ui.addFriendForm));
@@ -315,10 +394,56 @@
 
         // --- AUTHENTIFICATION ---
         const displayAuthError = (el, msg) => { el.textContent = msg; el.classList.remove('hidden'); }; const clearAuthError = (el) => { el.textContent = ''; el.classList.add('hidden'); };
-        const switchAuthTab = (activeTab) => { if (activeTab === 'login') { ui.loginTabBtn.classList.add('active'); ui.signupTabBtn.classList.remove('active'); ui.loginForm.classList.remove('hidden'); ui.signupForm.classList.add('hidden'); clearAuthError(ui.signupError); } else { ui.signupTabBtn.classList.add('active'); ui.loginTabBtn.classList.remove('active'); ui.signupForm.classList.remove('hidden'); ui.loginForm.classList.add('hidden'); clearAuthError(ui.loginError); } };
+        const switchAuthTab = (activeTab) => { if (activeTab === 'login') { ui.loginTabBtn.classList.add('active', 'text-primary'); ui.loginTabBtn.classList.remove('text-secondary'); ui.signupTabBtn.classList.remove('active', 'text-primary'); ui.signupTabBtn.classList.add('text-secondary'); ui.loginForm.classList.remove('hidden'); ui.signupForm.classList.add('hidden'); clearAuthError(ui.signupError); } else { ui.signupTabBtn.classList.add('active', 'text-primary'); ui.signupTabBtn.classList.remove('text-secondary'); ui.loginTabBtn.classList.remove('active', 'text-primary'); ui.loginTabBtn.classList.add('text-secondary'); ui.signupForm.classList.remove('hidden'); ui.loginForm.classList.add('hidden'); clearAuthError(ui.loginError); } };
         ui.loginTabBtn.addEventListener('click', () => switchAuthTab('login')); ui.signupTabBtn.addEventListener('click', () => switchAuthTab('signup')); switchAuthTab('login');
-        ui.loginForm.addEventListener('submit', async (e) => { e.preventDefault(); clearAuthError(ui.loginError); const username = document.getElementById('login-username').value; const password = document.getElementById('login-password').value; try { const usernameSnap = await getDoc(doc(db, "usernames", username.toLowerCase())); if (!usernameSnap.exists()) throw new Error("auth/user-not-found"); const { email } = (await getDoc(doc(db, "users", usernameSnap.data().uid))).data(); await signInWithEmailAndPassword(auth, email, password); } catch (error) { displayAuthError(ui.loginError, "Le pseudo ou le mot de passe est incorrect."); } });
-        ui.signupForm.addEventListener('submit', async (e) => { e.preventDefault(); clearAuthError(ui.signupError); const username = document.getElementById('signup-username').value; const displayName = document.getElementById('signup-displayname').value; const password = document.getElementById('signup-password').value; const pfp = document.getElementById('signup-pfp').value; if (!/^[a-zA-Z0-9_]{2,16}$/.test(username)) { return displayAuthError(ui.signupError, "Pseudo unique invalide (lettres, chiffres, _)."); } try { const usernameSnap = await getDoc(doc(db, "usernames", username.toLowerCase())); if (usernameSnap.exists()) return displayAuthError(ui.signupError, "Ce pseudo unique est déjà utilisé."); const dummyEmail = `${username.toLowerCase()}@chat.app`; const userCredential = await createUserWithEmailAndPassword(auth, dummyEmail, password); const batch = writeBatch(db); batch.set(doc(db, "users", userCredential.user.uid), { username: username.toLowerCase(), displayName, pfp, email: dummyEmail, channels: [], badges: ['active'] }); batch.set(doc(db, "usernames", username.toLowerCase()), { uid: userCredential.user.uid }); await batch.commit(); } catch (error) { if (error.code === 'auth/weak-password') { displayAuthError(ui.signupError, "Le mot de passe doit faire au moins 6 caractères."); } else { displayAuthError(ui.signupError, "Erreur lors de la création du compte."); } } });
+        
+        // CORRIGÉ: Logique de connexion simplifiée et robuste
+        ui.loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearAuthError(ui.loginError);
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            const dummyEmail = `${username.toLowerCase().trim()}@chat.app`;
+            try {
+                await signInWithEmailAndPassword(auth, dummyEmail, password);
+                // onAuthStateChanged s'occupera du reste
+            } catch (error) {
+                console.error("Login error:", error);
+                displayAuthError(ui.loginError, "Le pseudo ou le mot de passe est incorrect.");
+            }
+        });
+
+        ui.signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearAuthError(ui.signupError);
+            const username = document.getElementById('signup-username').value;
+            const displayName = document.getElementById('signup-displayname').value;
+            const password = document.getElementById('signup-password').value;
+            const pfp = document.getElementById('signup-pfp').value;
+            if (!/^[a-zA-Z0-9_]{2,16}$/.test(username)) {
+                return displayAuthError(ui.signupError, "Pseudo unique invalide (2-16 caractères, lettres, chiffres, _).");
+            }
+            try {
+                const usernameSnap = await getDoc(doc(db, "usernames", username.toLowerCase()));
+                if (usernameSnap.exists()) {
+                    return displayAuthError(ui.signupError, "Ce pseudo unique est déjà utilisé.");
+                }
+                const dummyEmail = `${username.toLowerCase()}@chat.app`;
+                const userCredential = await createUserWithEmailAndPassword(auth, dummyEmail, password);
+                const batch = writeBatch(db);
+                batch.set(doc(db, "users", userCredential.user.uid), { username: username.toLowerCase(), displayName, pfp, email: dummyEmail, channels: [], badges: ['active'] });
+                batch.set(doc(db, "usernames", username.toLowerCase()), { uid: userCredential.user.uid });
+                await batch.commit();
+                // onAuthStateChanged s'occupera du reste
+            } catch (error) {
+                console.error("Signup error:", error);
+                if (error.code === 'auth/weak-password') {
+                    displayAuthError(ui.signupError, "Le mot de passe doit faire au moins 6 caractères.");
+                } else {
+                    displayAuthError(ui.signupError, "Erreur lors de la création du compte.");
+                }
+            }
+        });
         ui.logoutBtn.addEventListener('click', () => signOut(auth));
     </script>
 </body>
